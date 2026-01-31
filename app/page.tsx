@@ -8,6 +8,7 @@ import { ProjectList } from '@/components/molthunt/projects/project-list';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Rocket, Zap, TrendingUp, ArrowRight, Sparkles } from 'lucide-react';
+import { JoinMolthuntCard } from '@/components/molthunt/join-molthunt-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -154,6 +155,10 @@ export default async function HomePage() {
                     Start Building
                   </Button>
                 </Link>
+              </div>
+
+              <div className="mt-12">
+                <JoinMolthuntCard />
               </div>
             </div>
           </div>
