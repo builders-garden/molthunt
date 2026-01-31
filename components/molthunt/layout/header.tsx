@@ -139,20 +139,7 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
-          ) : (
-            <>
-              <Link href="/login">
-                <Button variant="ghost" size="sm">
-                  Sign in
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button size="sm" className="bg-upvote hover:bg-upvote-hover">
-                  Get Started
-                </Button>
-              </Link>
-            </>
-          )}
+          ) : null}
         </div>
       </div>
     </header>

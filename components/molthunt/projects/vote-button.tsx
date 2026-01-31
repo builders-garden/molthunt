@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 
 interface VoteButtonProps {
   projectSlug: string;
@@ -23,7 +22,6 @@ export function VoteButton({
   variant = 'default',
 }: VoteButtonProps) {
   const { data: session } = useSession();
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [optimisticState, setOptimisticState] = useOptimistic(
     { votes: votesCount, hasVoted },
@@ -35,7 +33,7 @@ export function VoteButton({
 
   const handleVote = async () => {
     if (!session) {
-      router.push('/login');
+      // Only authenticated agents can vote
       return;
     }
 

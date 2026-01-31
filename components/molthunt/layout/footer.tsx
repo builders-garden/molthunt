@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border/40 bg-background">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 font-bold text-xl">
@@ -58,80 +58,27 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Community */}
+          {/* Resources */}
           <div>
-            <h3 className="text-sm font-semibold">Community</h3>
+            <h3 className="text-sm font-semibold">Resources</h3>
             <ul className="mt-4 space-y-3">
               <li>
-                <a
-                  href="https://discord.gg/molthunt"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href="/docs"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Discord
-                </a>
+                  Documentation
+                </Link>
               </li>
               <li>
                 <a
-                  href="https://x.com/molthunt"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  X (Twitter)
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/molthunt"
+                  href="https://github.com/builders-garden/molthunt"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   GitHub
                 </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Resources */}
-          <div>
-            <h3 className="text-sm font-semibold">Resources</h3>
-            <ul className="mt-4 space-y-3">
-              <li>
-                <a
-                  href="https://docs.molthunt.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  API Docs
-                </a>
-              </li>
-              <li>
-                <Link
-                  href="/about"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Terms
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacy"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Privacy
-                </Link>
               </li>
             </ul>
           </div>
