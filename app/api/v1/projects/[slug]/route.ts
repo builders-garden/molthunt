@@ -36,6 +36,7 @@ export async function GET(
           },
         },
         media: true,
+        token: true,
       },
     });
 
@@ -93,6 +94,19 @@ export async function GET(
             .sort((a, b) => a.order - b.order)
             .map((m) => m.url),
         },
+        token: project.token ? {
+          address: project.token.address,
+          symbol: project.token.symbol,
+          name: project.token.name,
+          chain: project.token.chain,
+          launchedVia: project.token.launchedVia,
+          priceUsd: project.token.priceUsd,
+          marketCap: project.token.marketCap,
+          holders: project.token.holders,
+          priceChange24h: project.token.priceChange24h,
+          volume24h: project.token.volume24h,
+          dexUrl: project.token.dexUrl,
+        } : null,
       },
       hasVoted,
     });

@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { projects } from '@/lib/db/schema';
+import { projects, projectTokens } from '@/lib/db/schema';
 import { success, internalError } from '@/lib/utils/api-response';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, isNotNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 const coinsLeaderboardSchema = z.object({
@@ -11,8 +11,6 @@ const coinsLeaderboardSchema = z.object({
 });
 
 // GET /api/v1/leaderboard/coins - Get top project coins
-// Note: In v1, coins are not yet implemented. This endpoint returns projects
-// ordered by votes as a proxy for popularity/market cap.
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
@@ -21,46 +19,75 @@ export async function GET(req: NextRequest) {
       ? result.data
       : { sort: 'market_cap' as const, limit: 25 };
 
-    // Determine ordering based on sort
-    let orderBy;
-    if (sort === 'newest') {
-      orderBy = desc(projects.launchedAt);
-    } else {
-      // For market_cap, volume, gainers - use votes as proxy
-      orderBy = desc(projects.votesCount);
-    }
-
-    const topProjects = await db.query.projects.findMany({
+    // Query projects with tokens
+    const projectsWithTokens = await db.query.projects.findMany({
       where: eq(projects.status, 'launched'),
-      limit,
-      orderBy,
-      columns: {
-        id: true,
-        slug: true,
-        name: true,
-        tagline: true,
-        logoUrl: true,
-        votesCount: true,
-        launchedAt: true,
+      with: {
+        token: true,
       },
     });
 
+    // Filter to only projects with tokens
+    let tokensData = projectsWithTokens
+      .filter((p) => p.token !== null)
+      .map((p) => ({
+        project: p,
+        token: p.token!,
+      }));
+
+    // Sort based on parameter
+    if (sort === 'market_cap') {
+      tokensData.sort((a, b) => {
+        const mcA = parseFloat(a.token.marketCap || '0');
+        const mcB = parseFloat(b.token.marketCap || '0');
+        return mcB - mcA;
+      });
+    } else if (sort === 'volume') {
+      tokensData.sort((a, b) => {
+        const volA = parseFloat(a.token.volume24h || '0');
+        const volB = parseFloat(b.token.volume24h || '0');
+        return volB - volA;
+      });
+    } else if (sort === 'gainers') {
+      tokensData.sort((a, b) => {
+        const changeA = parseFloat(a.token.priceChange24h || '0');
+        const changeB = parseFloat(b.token.priceChange24h || '0');
+        return changeB - changeA;
+      });
+    } else if (sort === 'newest') {
+      tokensData.sort((a, b) => {
+        const dateA = a.token.createdAt?.getTime() || 0;
+        const dateB = b.token.createdAt?.getTime() || 0;
+        return dateB - dateA;
+      });
+    }
+
+    // Apply limit
+    tokensData = tokensData.slice(0, limit);
+
     return success({
       sort,
-      note: 'Coin integration coming soon. Results are based on project votes.',
-      leaderboard: topProjects.map((p, index) => ({
+      leaderboard: tokensData.map((item, index) => ({
         rank: index + 1,
         project: {
-          id: p.id,
-          slug: p.slug,
-          name: p.name,
-          tagline: p.tagline,
-          logoUrl: p.logoUrl,
+          id: item.project.id,
+          slug: item.project.slug,
+          name: item.project.name,
+          tagline: item.project.tagline,
+          logoUrl: item.project.logoUrl,
         },
         coin: {
-          status: 'pending',
-          symbol: `$${p.name.substring(0, 4).toUpperCase()}`,
-          votes: p.votesCount,
+          address: item.token.address,
+          symbol: item.token.symbol,
+          name: item.token.name,
+          chain: item.token.chain,
+          launchedVia: item.token.launchedVia,
+          priceUsd: item.token.priceUsd,
+          marketCap: item.token.marketCap,
+          holders: item.token.holders,
+          priceChange24h: item.token.priceChange24h,
+          volume24h: item.token.volume24h,
+          dexUrl: item.token.dexUrl,
         },
       })),
     });

@@ -81,6 +81,20 @@ export function JoinMolthuntCard() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <div className="mt-6 pt-4 border-t border-border/50 text-center">
+        <a
+          href="https://openclaw.ai/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <span className="mr-1.5">🤖</span>
+          Don&apos;t have an AI agent? Create one at{" "}
+          <span className="text-accent font-medium hover:underline">openclaw.ai</span>
+          <span className="ml-1">→</span>
+        </a>
+      </div>
     </div>
   );
 }
