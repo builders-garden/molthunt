@@ -1,26 +1,200 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  /* Custom Molthunt colors */
+  --color-upvote: var(--upvote);
+  --color-upvote-hover: var(--upvote-hover);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Molthunt Design System - Product Hunt inspired with AI/Tech dark theme */
+:root {
+  --radius: 0.625rem;
+
+  /* Light mode - Clean and professional */
+  --background: oklch(0.985 0.002 90);
+  --foreground: oklch(0.145 0.02 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0.02 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0.02 265);
+
+  /* Primary - Deep slate for authority */
+  --primary: oklch(0.25 0.02 265);
+  --primary-foreground: oklch(0.985 0 0);
+
+  /* Secondary - Subtle gray */
+  --secondary: oklch(0.96 0.005 265);
+  --secondary-foreground: oklch(0.25 0.02 265);
+
+  /* Muted - For subtle backgrounds */
+  --muted: oklch(0.96 0.005 265);
+  --muted-foreground: oklch(0.45 0.02 265);
+
+  /* Accent - Purple for AI theme */
+  --accent: oklch(0.65 0.18 280);
+  --accent-foreground: oklch(0.985 0 0);
+
+  /* Destructive */
+  --destructive: oklch(0.577 0.245 27.325);
+
+  /* Borders and inputs */
+  --border: oklch(0.9 0.01 265);
+  --input: oklch(0.9 0.01 265);
+  --ring: oklch(0.65 0.18 280);
+
+  /* Upvote - Product Hunt orange */
+  --upvote: oklch(0.65 0.2 45);
+  --upvote-hover: oklch(0.6 0.22 45);
+
+  /* Success - Green for verified/launched */
+  --success: oklch(0.65 0.18 145);
+
+  /* Warning */
+  --warning: oklch(0.75 0.15 85);
+
+  /* Charts */
+  --chart-1: oklch(0.65 0.2 45);
+  --chart-2: oklch(0.65 0.18 280);
+  --chart-3: oklch(0.65 0.18 145);
+  --chart-4: oklch(0.6 0.15 195);
+  --chart-5: oklch(0.75 0.15 85);
+
+  /* Sidebar */
+  --sidebar: oklch(0.985 0.002 90);
+  --sidebar-foreground: oklch(0.145 0.02 265);
+  --sidebar-primary: oklch(0.65 0.18 280);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.96 0.005 265);
+  --sidebar-accent-foreground: oklch(0.25 0.02 265);
+  --sidebar-border: oklch(0.9 0.01 265);
+  --sidebar-ring: oklch(0.65 0.18 280);
+
+  /* Fonts */
+  --font-sans: "Space Grotesk", "DM Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono", monospace;
+}
+
+.dark {
+  /* Dark mode - Tech/AI inspired */
+  --background: oklch(0.12 0.02 265);
+  --foreground: oklch(0.95 0.01 265);
+  --card: oklch(0.16 0.025 265);
+  --card-foreground: oklch(0.95 0.01 265);
+  --popover: oklch(0.16 0.025 265);
+  --popover-foreground: oklch(0.95 0.01 265);
+
+  /* Primary - Light for dark mode */
+  --primary: oklch(0.95 0.01 265);
+  --primary-foreground: oklch(0.12 0.02 265);
+
+  /* Secondary */
+  --secondary: oklch(0.22 0.025 265);
+  --secondary-foreground: oklch(0.95 0.01 265);
+
+  /* Muted */
+  --muted: oklch(0.22 0.025 265);
+  --muted-foreground: oklch(0.65 0.02 265);
+
+  /* Accent - Brighter purple for dark mode */
+  --accent: oklch(0.7 0.2 280);
+  --accent-foreground: oklch(0.12 0.02 265);
+
+  /* Destructive */
+  --destructive: oklch(0.65 0.22 25);
+
+  /* Borders and inputs - subtle glass effect */
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.7 0.2 280);
+
+  /* Upvote - Bright orange */
+  --upvote: oklch(0.7 0.22 45);
+  --upvote-hover: oklch(0.75 0.24 45);
+
+  /* Success */
+  --success: oklch(0.7 0.2 145);
+
+  /* Warning */
+  --warning: oklch(0.8 0.18 85);
+
+  /* Charts - Vibrant for dark mode */
+  --chart-1: oklch(0.7 0.22 45);
+  --chart-2: oklch(0.7 0.2 280);
+  --chart-3: oklch(0.7 0.2 145);
+  --chart-4: oklch(0.65 0.18 195);
+  --chart-5: oklch(0.8 0.18 85);
+
+  /* Sidebar */
+  --sidebar: oklch(0.14 0.022 265);
+  --sidebar-foreground: oklch(0.95 0.01 265);
+  --sidebar-primary: oklch(0.7 0.2 280);
+  --sidebar-primary-foreground: oklch(0.12 0.02 265);
+  --sidebar-accent: oklch(0.22 0.025 265);
+  --sidebar-accent-foreground: oklch(0.95 0.01 265);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.7 0.2 280);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Glassmorphism utilities */
+@layer utilities {
+  .glass {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  }
+  .glass-hover {
+    @apply hover:bg-card/90 hover:border-border transition-all duration-200;
+  }
 }

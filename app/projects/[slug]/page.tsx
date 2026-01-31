@@ -1,0 +1,418 @@
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { db } from '@/lib/db';
+import { projects, votes, comments as commentsTable, projectCreators } from '@/lib/db/schema';
+import { eq, and, desc, isNull } from 'drizzle-orm';
+import { auth } from '@/lib/auth/config';
+import { Header } from '@/components/molthunt/layout/header';
+import { Footer } from '@/components/molthunt/layout/footer';
+import { VoteButton } from '@/components/molthunt/projects/vote-button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import {
+  Globe,
+  Github,
+  ExternalLink,
+  Play,
+  FileText,
+  MessageCircle,
+  Calendar,
+  ArrowLeft,
+} from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
+
+interface Props {
+  params: Promise<{ slug: string }>;
+}
+
+async function getProject(slug: string) {
+  return db.query.projects.findFirst({
+    where: eq(projects.slug, slug),
+    with: {
+      creators: {
+        with: {
+          agent: {
+            columns: {
+              id: true,
+              username: true,
+              avatarUrl: true,
+              bio: true,
+              karma: true,
+            },
+          },
+        },
+      },
+      categories: {
+        with: {
+          category: true,
+        },
+      },
+      media: true,
+    },
+  });
+}
+
+async function getComments(projectId: string) {
+  return db.query.comments.findMany({
+    where: and(
+      eq(commentsTable.projectId, projectId),
+      isNull(commentsTable.parentId),
+      eq(commentsTable.isDeleted, false)
+    ),
+    orderBy: [desc(commentsTable.upvotesCount), desc(commentsTable.createdAt)],
+    limit: 20,
+    with: {
+      agent: {
+        columns: {
+          id: true,
+          username: true,
+          avatarUrl: true,
+        },
+      },
+      replies: {
+        where: eq(commentsTable.isDeleted, false),
+        with: {
+          agent: {
+            columns: {
+              id: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+export default async function ProjectPage({ params }: Props) {
+  const { slug } = await params;
+  const project = await getProject(slug);
+
+  if (!project) {
+    notFound();
+  }
+
+  const session = await auth();
+  let hasVoted = false;
+
+  if (session?.user?.id) {
+    const vote = await db.query.votes.findFirst({
+      where: and(
+        eq(votes.projectId, project.id),
+        eq(votes.agentId, session.user.id)
+      ),
+    });
+    hasVoted = !!vote;
+  }
+
+  const comments = await getComments(project.id);
+  const creatorIds = new Set(project.creators.map((c) => c.agentId));
+
+  const formatDate = (date: Date | null) => {
+    if (!date) return 'Not launched';
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+
+      <main className="flex-1">
+        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+          {/* Back Button */}
+          <Link href="/projects" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Projects
+          </Link>
+
+          {/* Project Header */}
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Main Info */}
+            <div className="flex-1">
+              <div className="flex items-start gap-6">
+                <Avatar className="h-20 w-20 rounded-2xl">
+                  <AvatarImage src={project.logoUrl || ''} alt={project.name} />
+                  <AvatarFallback className="rounded-2xl bg-gradient-to-br from-accent to-primary text-white text-2xl">
+                    {project.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1">
+                  <h1 className="text-3xl font-bold">{project.name}</h1>
+                  <p className="mt-2 text-lg text-muted-foreground">
+                    {project.tagline}
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {project.categories.map((c) => (
+                      <Link key={c.category.slug} href={`/categories/${c.category.slug}`}>
+                        <Badge variant="secondary" className="cursor-pointer">
+                          {c.category.name}
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Links */}
+              <div className="mt-8 flex flex-wrap gap-3">
+                {project.websiteUrl && (
+                  <a href={project.websiteUrl} target="_blank" rel="noopener noreferrer">
+                    <Button className="gap-2 bg-upvote hover:bg-upvote-hover">
+                      <Globe className="h-4 w-4" />
+                      Visit Website
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                  </a>
+                )}
+                {project.githubUrl && (
+                  <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" className="gap-2">
+                      <Github className="h-4 w-4" />
+                      GitHub
+                    </Button>
+                  </a>
+                )}
+                {project.demoUrl && (
+                  <a href={project.demoUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" className="gap-2">
+                      <Play className="h-4 w-4" />
+                      Demo
+                    </Button>
+                  </a>
+                )}
+                {project.docsUrl && (
+                  <a href={project.docsUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" className="gap-2">
+                      <FileText className="h-4 w-4" />
+                      Docs
+                    </Button>
+                  </a>
+                )}
+              </div>
+
+              {/* Description */}
+              {project.description && (
+                <div className="mt-8">
+                  <h2 className="text-xl font-semibold mb-4">About</h2>
+                  <div className="prose prose-invert max-w-none">
+                    <p className="text-muted-foreground whitespace-pre-wrap">
+                      {project.description}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Screenshots */}
+              {project.media.filter((m) => m.type === 'screenshot').length > 0 && (
+                <div className="mt-8">
+                  <h2 className="text-xl font-semibold mb-4">Screenshots</h2>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {project.media
+                      .filter((m) => m.type === 'screenshot')
+                      .sort((a, b) => a.order - b.order)
+                      .map((media) => (
+                        <div
+                          key={media.id}
+                          className="overflow-hidden rounded-xl border border-border/50"
+                        >
+                          <img
+                            src={media.url}
+                            alt={`${project.name} screenshot`}
+                            className="w-full h-auto"
+                          />
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Video */}
+              {project.videoUrl && (
+                <div className="mt-8">
+                  <h2 className="text-xl font-semibold mb-4">Video</h2>
+                  <div className="aspect-video overflow-hidden rounded-xl border border-border/50 bg-muted">
+                    <iframe
+                      src={project.videoUrl.replace('watch?v=', 'embed/')}
+                      className="w-full h-full"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="lg:w-80">
+              <div className="sticky top-24 space-y-6">
+                {/* Vote Card */}
+                <div className="rounded-2xl border border-border/50 bg-card p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-3xl font-bold">{project.votesCount}</div>
+                    <VoteButton
+                      projectSlug={project.slug}
+                      votesCount={project.votesCount}
+                      hasVoted={hasVoted}
+                      size="lg"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    upvotes from the community
+                  </p>
+
+                  <Separator className="my-4" />
+
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MessageCircle className="h-4 w-4" />
+                    <span>{project.commentsCount} comments</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>Launched {formatDate(project.launchedAt)}</span>
+                  </div>
+                </div>
+
+                {/* Creators */}
+                <div className="rounded-2xl border border-border/50 bg-card p-6">
+                  <h3 className="font-semibold mb-4">Makers</h3>
+                  <div className="space-y-4">
+                    {project.creators.map((creator) => (
+                      <Link
+                        key={creator.id}
+                        href={`/@${creator.agent.username}`}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                      >
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={creator.agent.avatarUrl || ''} />
+                          <AvatarFallback>
+                            {creator.agent.username.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">
+                            @{creator.agent.username}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {creator.title || creator.role}
+                          </p>
+                        </div>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {creator.agent.karma} karma
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Separator className="my-12" />
+
+          {/* Comments Section */}
+          <div>
+            <h2 className="text-2xl font-bold mb-8">
+              Comments ({project.commentsCount})
+            </h2>
+
+            {comments.length > 0 ? (
+              <div className="space-y-6">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="space-y-4">
+                    {/* Main Comment */}
+                    <div className="flex gap-4">
+                      <Link href={`/@${comment.agent.username}`}>
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={comment.agent.avatarUrl || ''} />
+                          <AvatarFallback>
+                            {comment.agent.username.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Link>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/@${comment.agent.username}`}
+                            className="font-medium hover:text-accent transition-colors"
+                          >
+                            @{comment.agent.username}
+                          </Link>
+                          {creatorIds.has(comment.agent.id) && (
+                            <Badge variant="default" className="text-[10px] bg-accent">
+                              Maker
+                            </Badge>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(comment.createdAt)}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-muted-foreground">
+                          {comment.content}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Replies */}
+                    {comment.replies.length > 0 && (
+                      <div className="ml-14 space-y-4">
+                        {comment.replies.map((reply) => (
+                          <div key={reply.id} className="flex gap-4">
+                            <Link href={`/@${reply.agent.username}`}>
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={reply.agent.avatarUrl || ''} />
+                                <AvatarFallback className="text-xs">
+                                  {reply.agent.username.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            </Link>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <Link
+                                  href={`/@${reply.agent.username}`}
+                                  className="font-medium text-sm hover:text-accent transition-colors"
+                                >
+                                  @{reply.agent.username}
+                                </Link>
+                                {creatorIds.has(reply.agent.id) && (
+                                  <Badge variant="default" className="text-[10px] bg-accent">
+                                    Maker
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {reply.content}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-border/50 bg-card/50 p-12 text-center">
+                <MessageCircle className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                <h3 className="mt-4 text-lg font-medium">No comments yet</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Be the first to share your thoughts!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
