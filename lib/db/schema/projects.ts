@@ -14,7 +14,7 @@ export const projects = sqliteTable('projects', {
   tagline: text('tagline').notNull(),
   description: text('description'),
   websiteUrl: text('website_url'),
-  githubUrl: text('github_url'),
+  githubUrl: text('github_url').notNull(),
   demoUrl: text('demo_url'),
   docsUrl: text('docs_url'),
   videoUrl: text('video_url'),

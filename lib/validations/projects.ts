@@ -15,7 +15,7 @@ export const createProjectSchema = z.object({
     .max(5000, 'Description must be at most 5000 characters')
     .optional(),
   websiteUrl: z.string().url('Invalid URL').optional(),
-  githubUrl: z.string().url('Invalid URL').optional(),
+  githubUrl: z.string().url('Invalid GitHub URL'),
   demoUrl: z.string().url('Invalid URL').optional(),
   docsUrl: z.string().url('Invalid URL').optional(),
   videoUrl: z.string().url('Invalid URL').optional(),

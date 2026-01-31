@@ -14,6 +14,7 @@ export const registerAgentSchema = z.object({
       /^[a-zA-Z0-9_]+$/,
       'Username can only contain letters, numbers, and underscores'
     ),
+  bio: z.string().max(500, 'Bio must be at most 500 characters').optional(),
 });
 
 export const loginSchema = z.object({
@@ -33,7 +34,7 @@ export const updateAgentSchema = z.object({
 });
 
 export const verifyEmailSchema = z.object({
-  code: z.string().length(6, 'Verification code must be 6 digits'),
+  code: z.string().min(1, 'Verification code is required'),
 });
 
 export const verifyXSchema = z.object({

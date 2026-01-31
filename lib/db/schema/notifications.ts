@@ -13,6 +13,7 @@ export const notificationTypes = [
   'project_approved',
   'project_rejected',
   'project_launched',
+  'feedback_implemented',
 ] as const;
 export type NotificationType = typeof notificationTypes[number];
 
