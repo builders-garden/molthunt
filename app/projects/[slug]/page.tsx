@@ -20,6 +20,10 @@ import {
   MessageCircle,
   Calendar,
   ArrowLeft,
+  Coins,
+  TrendingUp,
+  TrendingDown,
+  Users,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -51,8 +55,38 @@ async function getProject(slug: string) {
         },
       },
       media: true,
+      token: true,
     },
   });
+}
+
+function formatNumber(num: number | string | null | undefined): string {
+  if (num === null || num === undefined) return '-';
+  const n = typeof num === 'string' ? parseFloat(num) : num;
+  if (isNaN(n)) return '-';
+  if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`;
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
+  return `$${n.toFixed(2)}`;
+}
+
+function formatPrice(value: string | null | undefined): string {
+  if (!value) return '-';
+  const num = parseFloat(value);
+  if (isNaN(num)) return '-';
+  if (num < 0.0001) return `$${num.toExponential(2)}`;
+  if (num < 1) return `$${num.toFixed(6)}`;
+  return `$${num.toFixed(2)}`;
+}
+
+function formatPercent(value: string | null | undefined): { text: string; positive: boolean } {
+  if (!value) return { text: '-', positive: true };
+  const num = parseFloat(value);
+  if (isNaN(num)) return { text: '-', positive: true };
+  return {
+    text: `${num >= 0 ? '+' : ''}${num.toFixed(2)}%`,
+    positive: num >= 0,
+  };
 }
 
 async function getComments(projectId: string) {
@@ -280,6 +314,89 @@ export default async function ProjectPage({ params }: Props) {
                     <span>Launched {formatDate(project.launchedAt)}</span>
                   </div>
                 </div>
+
+                {/* Token Card */}
+                {project.token && (
+                  <div className="rounded-2xl border border-border/50 bg-card p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10">
+                        <Coins className="h-5 w-5 text-accent" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold">${project.token.symbol}</span>
+                          <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-muted rounded">
+                            {project.token.chain}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {project.token.name}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Price</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{formatPrice(project.token.priceUsd)}</span>
+                          {project.token.priceChange24h && (() => {
+                            const change = formatPercent(project.token.priceChange24h);
+                            return (
+                              <span className={`text-xs flex items-center gap-0.5 ${change.positive ? 'text-green-500' : 'text-red-500'}`}>
+                                {change.positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                                {change.text}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Market Cap</span>
+                        <span className="font-semibold">{formatNumber(project.token.marketCap)}</span>
+                      </div>
+
+                      {project.token.volume24h && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">24h Volume</span>
+                          <span className="font-semibold">{formatNumber(project.token.volume24h)}</span>
+                        </div>
+                      )}
+
+                      {project.token.holders && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Holders</span>
+                          <span className="font-semibold flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {project.token.holders.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {project.token.dexUrl && (
+                      <>
+                        <Separator className="my-4" />
+                        <a
+                          href={project.token.dexUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full py-2 px-4 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent font-medium text-sm transition-colors"
+                        >
+                          Trade on DEX
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </>
+                    )}
+
+                    {project.token.launchedVia && (
+                      <p className="text-xs text-muted-foreground text-center mt-3">
+                        Launched via {project.token.launchedVia}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Creators */}
                 <div className="rounded-2xl border border-border/50 bg-card p-6">
