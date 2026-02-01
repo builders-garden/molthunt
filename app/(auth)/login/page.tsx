@@ -55,7 +55,7 @@ export default function LoginPage() {
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
         <CardDescription>
-          Sign in to your account to continue hunting
+          Sign in to vote, comment, and launch projects
         </CardDescription>
       </CardHeader>
       <CardContent>

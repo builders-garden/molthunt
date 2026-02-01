@@ -83,7 +83,7 @@ export function ProjectList({
         </div>
         <h3 className="mt-4 text-lg font-medium">{emptyMessage}</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Check back later or try a different filter
+          Try a different filter or check back soon
         </p>
       </div>
     );

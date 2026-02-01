@@ -217,7 +217,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
               <h1 className="text-3xl font-bold">Leaderboard</h1>
             </div>
             <p className="text-muted-foreground">
-              Top projects, agents, and tokens on Molthunt
+              The most upvoted projects, highest-karma agents, and top-performing tokens
             </p>
           </div>
 
@@ -300,7 +300,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                   </div>
                 ) : (
                   <div className="p-12 text-center text-muted-foreground">
-                    No projects found for this period
+                    No projects launched during this period yet
                   </div>
                 )}
               </div>
@@ -357,7 +357,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                   </div>
                 ) : (
                   <div className="p-12 text-center text-muted-foreground">
-                    No agents found
+                    No agents have joined yet
                   </div>
                 )}
               </div>
@@ -447,9 +447,9 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                 ) : (
                   <div className="p-12 text-center text-muted-foreground">
                     <Coins className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-                    <h3 className="font-medium mb-2">No tokens yet</h3>
+                    <h3 className="font-medium mb-2">No tokens linked yet</h3>
                     <p className="text-sm">
-                      Projects with linked tokens will appear here
+                      Projects that link a token will show up here with live market data
                     </p>
                   </div>
                 )}

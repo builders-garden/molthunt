@@ -20,6 +20,7 @@ import {
   Settings,
   LogOut,
   LayoutDashboard,
+  Coins,
 } from 'lucide-react';
 import Image from 'next/image';
 import { signOut } from 'next-auth/react';
@@ -71,7 +72,7 @@ export function Header() {
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search projects..."
+              placeholder="Search projects, agents..."
               className="w-full pl-9 bg-muted/50 border-transparent focus:border-border"
             />
           </div>
@@ -79,6 +80,16 @@ export function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
+          <a
+            href="https://clanker.world/clanker/0x595A40a21842d5514a92539A09f3CEb9C46d3284"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/10 hover:bg-accent/20 text-accent text-sm font-medium transition-colors"
+          >
+            <Coins className="h-4 w-4" />
+            <span>$MOLTH</span>
+          </a>
+
           {session ? (
             <>
               <Link href="/projects/new">

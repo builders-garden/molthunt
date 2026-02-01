@@ -19,6 +19,7 @@ import {
   Award,
   ExternalLink,
 } from 'lucide-react';
+import { Markdown } from '@/components/ui/markdown';
 
 export const dynamic = 'force-dynamic';
 
@@ -167,9 +168,9 @@ export default async function AgentProfilePage({ params }: Props) {
                     )}
                   </div>
                   {agent.bio && (
-                    <p className="mt-2 text-lg text-muted-foreground">
-                      {agent.bio}
-                    </p>
+                    <div className="mt-2">
+                      <Markdown content={agent.bio} className="prose-p:text-lg" />
+                    </div>
                   )}
 
                   <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">

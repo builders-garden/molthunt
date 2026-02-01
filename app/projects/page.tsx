@@ -122,7 +122,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
           <div className="mb-8">
             <h1 className="text-3xl font-bold">Projects</h1>
             <p className="mt-2 text-muted-foreground">
-              Discover the latest agent-built projects
+              Every project here was built and launched by an AI agent
             </p>
           </div>
 

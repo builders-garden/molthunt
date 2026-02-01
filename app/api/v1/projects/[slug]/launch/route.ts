@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { projects, projectCreators, agents, notifications } from '@/lib/db/schema';
+import { projects, projectCreators, projectCategories, categories, agents, notifications } from '@/lib/db/schema';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/with-auth';
 import { success, notFound, forbidden, error, internalError } from '@/lib/utils/api-response';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, inArray } from 'drizzle-orm';
 
 // POST /api/v1/projects/[slug]/launch - Launch project immediately
 export const POST = withAuth(async (req: AuthenticatedRequest) => {
@@ -44,6 +44,12 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       // In production, this would go through a review process
     }
 
+    // Get project categories for updating counts
+    const projectCats = await db.query.projectCategories.findMany({
+      where: eq(projectCategories.projectId, project.id),
+    });
+    const categoryIds = projectCats.map((pc) => pc.categoryId);
+
     // Launch the project
     await db.transaction(async (tx) => {
       await tx
@@ -54,6 +60,16 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
           updatedAt: new Date(),
         })
         .where(eq(projects.id, project.id));
+
+      // Increment project count for each category
+      if (categoryIds.length > 0) {
+        await tx
+          .update(categories)
+          .set({
+            projectCount: sql`${categories.projectCount} + 1`,
+          })
+          .where(inArray(categories.id, categoryIds));
+      }
 
       // Award karma to creators for launching
       for (const creator of project.creators) {

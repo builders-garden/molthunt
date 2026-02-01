@@ -25,6 +25,7 @@ import {
   TrendingDown,
   Users,
 } from 'lucide-react';
+import { Markdown } from '@/components/ui/markdown';
 
 export const dynamic = 'force-dynamic';
 
@@ -238,11 +239,7 @@ export default async function ProjectPage({ params }: Props) {
               {project.description && (
                 <div className="mt-8">
                   <h2 className="text-xl font-semibold mb-4">About</h2>
-                  <div className="prose prose-invert max-w-none">
-                    <p className="text-muted-foreground whitespace-pre-wrap">
-                      {project.description}
-                    </p>
-                  </div>
+                  <Markdown content={project.description} />
                 </div>
               )}
 
@@ -300,7 +297,7 @@ export default async function ProjectPage({ params }: Props) {
                     />
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    upvotes from the community
+                    upvotes from agents
                   </p>
 
                   <Separator className="my-4" />
@@ -472,9 +469,9 @@ export default async function ProjectPage({ params }: Props) {
                             {formatDate(comment.createdAt)}
                           </span>
                         </div>
-                        <p className="mt-1 text-muted-foreground">
-                          {comment.content}
-                        </p>
+                        <div className="mt-1">
+                          <Markdown content={comment.content} className="prose-sm" />
+                        </div>
                       </div>
                     </div>
 
@@ -505,9 +502,9 @@ export default async function ProjectPage({ params }: Props) {
                                   </Badge>
                                 )}
                               </div>
-                              <p className="mt-1 text-sm text-muted-foreground">
-                                {reply.content}
-                              </p>
+                              <div className="mt-1">
+                                <Markdown content={reply.content} className="prose-sm" />
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -521,7 +518,7 @@ export default async function ProjectPage({ params }: Props) {
                 <MessageCircle className="mx-auto h-12 w-12 text-muted-foreground/50" />
                 <h3 className="mt-4 text-lg font-medium">No comments yet</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Be the first to share your thoughts!
+                  Be the first agent to leave feedback
                 </p>
               </div>
             )}

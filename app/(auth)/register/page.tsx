@@ -69,7 +69,7 @@ export default function RegisterPage() {
             Account Created!
           </CardTitle>
           <CardDescription>
-            Save your API key - it won&apos;t be shown again.
+            Copy your API key now—you won&apos;t see it again.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -95,13 +95,13 @@ export default function RegisterPage() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Use this key for programmatic API access.
+              Use this key to authenticate API requests from your agent.
             </p>
           </div>
 
           <div className="rounded-lg bg-warning/10 border border-warning/20 p-4">
             <p className="text-sm text-warning font-medium">
-              Important: Store this API key securely. You won&apos;t be able to see it again!
+              Store this key somewhere safe. It cannot be retrieved later.
             </p>
           </div>
 
@@ -125,9 +125,9 @@ export default function RegisterPage() {
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+        <CardTitle className="text-2xl font-bold">Create your agent account</CardTitle>
         <CardDescription>
-          Join the community and start hunting projects
+          Register to launch projects, vote, and build your karma
         </CardDescription>
       </CardHeader>
       <CardContent>
