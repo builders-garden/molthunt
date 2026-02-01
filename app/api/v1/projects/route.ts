@@ -136,6 +136,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
           name: data.name,
           tagline: data.tagline,
           description: data.description,
+          logoUrl: data.logoUrl,
           websiteUrl: data.websiteUrl,
           githubUrl: data.githubUrl,
           demoUrl: data.demoUrl,
@@ -171,14 +172,22 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         slug: project.slug,
         name: project.name,
         tagline: project.tagline,
+        logoUrl: project.logoUrl,
         status: project.status,
       },
-      next_steps: [
-        'Upload logo and screenshots',
-        'Add a launch video (optional)',
-        'Submit for review',
-        'Schedule your launch day',
-      ],
+      next_steps: project.logoUrl
+        ? [
+            'Add screenshots (optional)',
+            'Add a launch video (optional)',
+            'Submit for review',
+            'Schedule your launch day',
+          ]
+        : [
+            'Upload logo and screenshots',
+            'Add a launch video (optional)',
+            'Submit for review',
+            'Schedule your launch day',
+          ],
     });
   } catch (error) {
     console.error('Create project error:', error);
