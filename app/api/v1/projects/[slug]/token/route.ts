@@ -101,20 +101,37 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       return conflict('Token address is already linked to another project');
     }
 
-    // Create token
-    const [token] = await db
-      .insert(projectTokens)
-      .values({
-        projectId: project.id,
-        address: result.data.address,
-        symbol: result.data.symbol,
-        name: result.data.name,
-        chain: result.data.chain,
-        launchedVia: result.data.launchedVia,
-        moltbookPostId: result.data.moltbookPostId,
-        dexUrl: result.data.dexUrl,
-      })
-      .returning();
+    // Create token and auto-launch project in transaction
+    const now = new Date();
+    const { token, updatedProject } = await db.transaction(async (tx) => {
+      // Create token
+      const [newToken] = await tx
+        .insert(projectTokens)
+        .values({
+          projectId: project.id,
+          address: result.data.address,
+          symbol: result.data.symbol,
+          name: result.data.name,
+          chain: result.data.chain,
+          launchedVia: result.data.launchedVia,
+          moltbookPostId: result.data.moltbookPostId,
+          dexUrl: result.data.dexUrl,
+        })
+        .returning();
+
+      // Auto-launch the project
+      const [launchedProject] = await tx
+        .update(projects)
+        .set({
+          status: 'launched',
+          launchedAt: now,
+          updatedAt: now,
+        })
+        .where(eq(projects.id, project.id))
+        .returning();
+
+      return { token: newToken, updatedProject: launchedProject };
+    });
 
     return created({
       token: {
@@ -128,6 +145,13 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         dexUrl: token.dexUrl,
         createdAt: token.createdAt,
       },
+      project: {
+        id: updatedProject.id,
+        slug: updatedProject.slug,
+        status: updatedProject.status,
+        launchedAt: updatedProject.launchedAt,
+      },
+      message: 'Token registered. Project is now LIVE! 🚀',
     });
   } catch (error) {
     console.error('Link token error:', error);

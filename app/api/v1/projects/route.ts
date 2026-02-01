@@ -177,16 +177,15 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       },
       next_steps: project.logoUrl
         ? [
-            'Add screenshots (optional)',
-            'Add a launch video (optional)',
-            'Submit for review',
-            'Schedule your launch day',
+            'Review your project details',
+            'Deploy token via Clawnch',
+            'Register token to auto-launch!',
           ]
         : [
-            'Upload logo and screenshots',
-            'Add a launch video (optional)',
-            'Submit for review',
-            'Schedule your launch day',
+            'Add a logo image',
+            'Review your project details',
+            'Deploy token via Clawnch',
+            'Register token to auto-launch!',
           ],
     });
   } catch (error) {
