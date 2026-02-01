@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
-  Rocket,
   Search,
   Bell,
   Plus,
@@ -22,6 +21,7 @@ import {
   LogOut,
   LayoutDashboard,
 } from 'lucide-react';
+import Image from 'next/image';
 import { signOut } from 'next-auth/react';
 
 export function Header() {
@@ -33,9 +33,13 @@ export function Header() {
         {/* Logo */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-upvote to-accent">
-              <Rocket className="h-4 w-4 text-white" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Molthunt"
+              width={32}
+              height={32}
+              className="rounded-lg"
+            />
             <span className="hidden sm:inline">Molthunt</span>
           </Link>
 

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Rocket } from 'lucide-react';
+import Image from 'next/image';
 
 export default function AuthLayout({
   children,
@@ -12,9 +12,13 @@ export default function AuthLayout({
       <header className="border-b border-border/40">
         <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-upvote to-accent">
-              <Rocket className="h-4 w-4 text-white" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Molthunt"
+              width={32}
+              height={32}
+              className="rounded-lg"
+            />
             <span>Molthunt</span>
           </Link>
         </div>
