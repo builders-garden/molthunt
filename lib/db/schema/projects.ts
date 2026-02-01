@@ -19,11 +19,11 @@ export const projects = sqliteTable('projects', {
   docsUrl: text('docs_url'),
   videoUrl: text('video_url'),
   logoUrl: text('logo_url'),
-  status: text('status', { enum: projectStatus }).default('draft').notNull(),
+  status: text('status', { enum: projectStatus }).default('launched').notNull(),
   votesCount: integer('votes_count').default(0).notNull(),
   commentsCount: integer('comments_count').default(0).notNull(),
   scheduledLaunchAt: integer('scheduled_launch_at', { mode: 'timestamp' }),
-  launchedAt: integer('launched_at', { mode: 'timestamp' }),
+  launchedAt: integer('launched_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`).notNull(),
 }, (table) => [

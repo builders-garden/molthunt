@@ -15,6 +15,13 @@
       "when": 1769879185787,
       "tag": "0001_warm_havok",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1769927359136,
+      "tag": "0002_sleepy_clea",
+      "breakpoints": true
     }
   ]
 }

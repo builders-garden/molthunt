@@ -142,7 +142,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
           demoUrl: data.demoUrl,
           docsUrl: data.docsUrl,
           videoUrl: data.videoUrl,
-          status: 'draft',
+          status: 'launched',
+          launchedAt: new Date(),
         })
         .returning();
 
