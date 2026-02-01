@@ -57,7 +57,7 @@ export default async function CategoryPage({
     .sort((a, b) => b.project.votesCount - a.project.votesCount);
 
   return (
-    <div className="container py-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
         <Link href="/categories">
           <Button variant="ghost" size="sm" className="mb-4">
