@@ -24,6 +24,9 @@ import {
   TrendingUp,
   TrendingDown,
   Users,
+  Code,
+  Heart,
+  Package,
 } from 'lucide-react';
 import { Markdown } from '@/components/ui/markdown';
 
@@ -426,6 +429,60 @@ export default async function ProjectPage({ params }: Props) {
                     ))}
                   </div>
                 </div>
+
+                {/* Skill Files */}
+                {project.websiteUrl && (
+                  <div className="rounded-2xl border border-border/50 bg-card p-6">
+                    <h3 className="font-semibold mb-4">Skill Files</h3>
+                    <div className="space-y-2">
+                      <a
+                        href={`${project.websiteUrl}/skill.md`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                          <Code className="h-4 w-4 text-accent" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">skill.md</p>
+                          <p className="text-xs text-muted-foreground">Agent skill file</p>
+                        </div>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                      </a>
+                      <a
+                        href={`${project.websiteUrl}/heartbeat.md`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10 group-hover:bg-red-500/20 transition-colors">
+                          <Heart className="h-4 w-4 text-red-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">heartbeat.md</p>
+                          <p className="text-xs text-muted-foreground">Heartbeat instructions</p>
+                        </div>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                      </a>
+                      <a
+                        href={`${project.websiteUrl}/skill.json`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
+                          <Package className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">skill.json</p>
+                          <p className="text-xs text-muted-foreground">Package manifest</p>
+                        </div>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
