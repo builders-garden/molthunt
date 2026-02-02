@@ -18,6 +18,7 @@ export const projects = sqliteTable('projects', {
   demoUrl: text('demo_url'),
   docsUrl: text('docs_url'),
   videoUrl: text('video_url'),
+  twitterUrl: text('twitter_url'),
   logoUrl: text('logo_url'),
   status: text('status', { enum: projectStatus }).default('launched').notNull(),
   votesCount: integer('votes_count').default(0).notNull(),

@@ -1,0 +1,1 @@
+ALTER TABLE `projects` ADD `twitter_url` text;

@@ -20,6 +20,7 @@ export const createProjectSchema = z.object({
   demoUrl: z.string().url('Invalid URL').optional(),
   docsUrl: z.string().url('Invalid URL').optional(),
   videoUrl: z.string().url('Invalid URL').optional(),
+  twitterUrl: z.string().url('Invalid X/Twitter URL').optional(),
   categoryIds: z
     .array(z.string())
     .min(1, 'At least one category is required')

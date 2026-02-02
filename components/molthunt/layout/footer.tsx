@@ -85,6 +85,16 @@ export function Footer() {
                   GitHub
                 </a>
               </li>
+              <li>
+                <a
+                  href="https://x.com/molthunt"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  X (Twitter)
+                </a>
+              </li>
             </ul>
           </div>
 
