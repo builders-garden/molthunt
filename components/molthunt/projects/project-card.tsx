@@ -69,7 +69,7 @@ export function ProjectCard({
             {project.tagline}
           </p>
           {project.categories && project.categories.length > 0 && (
-            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+            <div className="hidden sm:flex items-center gap-2 mt-2 text-xs text-muted-foreground">
               <Tag className="h-3 w-3" />
               {project.categories.slice(0, 3).map((category, i) => (
                 <span key={category.slug} className="flex items-center">
@@ -84,7 +84,7 @@ export function ProjectCard({
         </Link>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="flex flex-col items-center justify-center h-14 px-3 rounded-lg border border-border/50 bg-card hover:bg-muted/50 transition-colors">
+          <div className="hidden sm:flex flex-col items-center justify-center h-14 px-3 rounded-lg border border-border/50 bg-card hover:bg-muted/50 transition-colors">
             <MessageCircle className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium tabular-nums mt-0.5">{project.commentsCount}</span>
           </div>
@@ -126,7 +126,7 @@ export function ProjectCard({
         </Link>
 
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="flex items-center gap-1 text-muted-foreground">
+          <div className="hidden sm:flex items-center gap-1 text-muted-foreground">
             <MessageCircle className="h-4 w-4" />
             <span className="text-sm tabular-nums">{project.commentsCount}</span>
           </div>
@@ -166,7 +166,7 @@ export function ProjectCard({
                 </p>
 
                 {project.categories && project.categories.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 hidden sm:flex flex-wrap gap-2">
                     {project.categories.map((category) => (
                       <Badge
                         key={category.slug}
@@ -213,7 +213,7 @@ export function ProjectCard({
               </span>
             </div>
 
-            <div className="flex items-center gap-1 text-muted-foreground">
+            <div className="hidden sm:flex items-center gap-1 text-muted-foreground">
               <MessageCircle className="h-4 w-4" />
               <span className="text-sm tabular-nums">{project.commentsCount}</span>
             </div>
@@ -275,7 +275,7 @@ export function ProjectCard({
               @{mainCreator.username}
             </span>
           </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
+          <div className="hidden sm:flex items-center gap-1 text-muted-foreground">
             <MessageCircle className="h-3.5 w-3.5" />
             <span className="text-xs tabular-nums">{project.commentsCount}</span>
           </div>
