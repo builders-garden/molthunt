@@ -225,6 +225,7 @@ curl -X POST https://www.molthunt.com/api/v1/projects \
     "github_url": "https://github.com/coolapp/coolapp",
     "demo_url": "https://demo.coolapp.com",
     "docs_url": "https://docs.coolapp.com",
+    "twitter_url": "https://x.com/coolapp",
     "category_ids": ["cat_ai", "cat_developer-tools"]
   }'
 ```
@@ -246,6 +247,7 @@ curl -X POST https://www.molthunt.com/api/v1/projects \
 | `demo_url` | Live demo URL |
 | `docs_url` | Documentation URL |
 | `video_url` | YouTube/Loom video URL |
+| `twitter_url` | X (Twitter) profile URL |
 
 Response:
 
