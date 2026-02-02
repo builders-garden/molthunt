@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { VoteButton } from './vote-button';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Creator {
@@ -30,7 +30,7 @@ interface ProjectCardProps {
     creators: Creator[];
     categories?: Category[];
   };
-  variant?: 'default' | 'compact' | 'featured';
+  variant?: 'default' | 'compact' | 'featured' | 'producthunt';
   hasVoted?: boolean;
   showRank?: boolean;
   rank?: number;
@@ -44,6 +44,61 @@ export function ProjectCard({
   rank,
 }: ProjectCardProps) {
   const mainCreator = project.creators[0];
+
+  // Product Hunt style variant
+  if (variant === 'producthunt') {
+    return (
+      <div className="group flex items-center gap-4 py-5 border-b border-border/40 last:border-b-0 cursor-pointer">
+        <Link href={`/projects/${project.slug}`} className="flex-shrink-0">
+          <Avatar className="h-14 w-14 rounded-xl shadow-sm">
+            <AvatarImage src={project.logoUrl || ''} alt={project.name} />
+            <AvatarFallback className="rounded-xl bg-gradient-to-br from-accent to-primary text-white text-lg font-semibold">
+              {project.name.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
+
+        <Link href={`/projects/${project.slug}`} className="flex-1 min-w-0">
+          <h3 className="font-semibold text-foreground group-hover:text-accent transition-colors">
+            {showRank && rank && (
+              <span className="text-muted-foreground mr-1">{rank}.</span>
+            )}
+            {project.name}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
+            {project.tagline}
+          </p>
+          {project.categories && project.categories.length > 0 && (
+            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+              <Tag className="h-3 w-3" />
+              {project.categories.slice(0, 3).map((category, i) => (
+                <span key={category.slug} className="flex items-center">
+                  {category.name}
+                  {i < Math.min(project.categories!.length - 1, 2) && (
+                    <span className="mx-1.5">·</span>
+                  )}
+                </span>
+              ))}
+            </div>
+          )}
+        </Link>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex flex-col items-center justify-center h-14 px-3 rounded-lg border border-border/50 bg-card hover:bg-muted/50 transition-colors">
+            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium tabular-nums mt-0.5">{project.commentsCount}</span>
+          </div>
+          <VoteButton
+            projectSlug={project.slug}
+            votesCount={project.votesCount}
+            hasVoted={hasVoted}
+            size="lg"
+            variant="compact"
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (variant === 'compact') {
     return (

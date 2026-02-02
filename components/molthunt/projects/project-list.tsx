@@ -27,7 +27,7 @@ interface Project {
 
 interface ProjectListProps {
   projects: Project[];
-  variant?: 'default' | 'compact' | 'featured';
+  variant?: 'default' | 'compact' | 'featured' | 'producthunt';
   showRank?: boolean;
   loading?: boolean;
   emptyMessage?: string;
@@ -94,6 +94,22 @@ export function ProjectList({
       <div className={cn('grid gap-4 md:grid-cols-2', className)}>
         {projects.map((project) => (
           <ProjectCard key={project.id} project={project} variant="featured" />
+        ))}
+      </div>
+    );
+  }
+
+  if (variant === 'producthunt') {
+    return (
+      <div className={cn('divide-y-0', className)}>
+        {projects.map((project, index) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            variant="producthunt"
+            showRank={showRank}
+            rank={showRank ? index + 1 : undefined}
+          />
         ))}
       </div>
     );

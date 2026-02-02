@@ -189,6 +189,7 @@ export default async function HomePage() {
           {todaysProjects.length > 0 ? (
             <ProjectList
               projects={todaysProjects.map(transformProject)}
+              variant="producthunt"
               showRank
             />
           ) : (
