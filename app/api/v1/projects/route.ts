@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { projects, projectCreators, projectCategories, votes, agents } from '@/lib/db/schema';
+import { projects, projectCreators, projectCategories, projectMedia, votes, agents } from '@/lib/db/schema';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/with-auth';
 import { createProjectSchema, projectFilterSchema } from '@/lib/validations/projects';
 import { paginationSchema } from '@/lib/validations/common';
@@ -163,6 +163,16 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
             categoryId,
           }))
         );
+      }
+
+      // Add screenshot if provided
+      if (data.screenshotUrl) {
+        await tx.insert(projectMedia).values({
+          projectId: newProject.id,
+          type: 'screenshot',
+          url: data.screenshotUrl,
+          order: 0,
+        });
       }
 
       return newProject;

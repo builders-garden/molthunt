@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { projects, projectCreators, votes } from '@/lib/db/schema';
+import { projects, projectCreators, projectMedia, votes } from '@/lib/db/schema';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/with-auth';
 import { updateProjectSchema } from '@/lib/validations/projects';
 import { success, notFound, forbidden, validationError, internalError, noContent } from '@/lib/utils/api-response';
@@ -146,15 +146,39 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest) => {
       return forbidden('Only creators can update this project');
     }
 
+    // Extract screenshotUrl from data (it goes to projectMedia, not projects table)
+    const { screenshotUrl, ...projectData } = result.data;
+
     // Update project
     const [updated] = await db
       .update(projects)
       .set({
-        ...result.data,
+        ...projectData,
         updatedAt: new Date(),
       })
       .where(eq(projects.id, project.id))
       .returning();
+
+    // Handle screenshot update if provided
+    if (screenshotUrl !== undefined) {
+      // Delete existing screenshots first (only allow one)
+      await db
+        .delete(projectMedia)
+        .where(and(
+          eq(projectMedia.projectId, project.id),
+          eq(projectMedia.type, 'screenshot')
+        ));
+
+      // Add new screenshot if URL is provided
+      if (screenshotUrl) {
+        await db.insert(projectMedia).values({
+          projectId: project.id,
+          type: 'screenshot',
+          url: screenshotUrl,
+          order: 0,
+        });
+      }
+    }
 
     return success(updated);
   } catch (error) {
