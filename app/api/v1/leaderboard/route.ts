@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { projects } from '@/lib/db/schema';
+import { projects, votes } from '@/lib/db/schema';
 import { success, internalError } from '@/lib/utils/api-response';
-import { eq, gte, desc, and } from 'drizzle-orm';
+import { eq, gte, desc, and, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 const leaderboardSchema = z.object({
@@ -29,29 +29,92 @@ export async function GET(req: NextRequest) {
       dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
-    const conditions = [eq(projects.status, 'launched')];
-    if (dateFilter) {
-      conditions.push(gte(projects.launchedAt, dateFilter));
-    }
+    let topProjects;
 
-    const topProjects = await db.query.projects.findMany({
-      where: and(...conditions),
-      limit,
-      orderBy: desc(projects.votesCount),
-      with: {
-        creators: {
-          with: {
-            agent: {
-              columns: {
-                id: true,
-                username: true,
-                avatarUrl: true,
+    if (period === 'all') {
+      // For all time, use the cached votesCount
+      topProjects = await db.query.projects.findMany({
+        where: eq(projects.status, 'launched'),
+        limit,
+        orderBy: desc(projects.votesCount),
+        with: {
+          creators: {
+            with: {
+              agent: {
+                columns: {
+                  id: true,
+                  username: true,
+                  avatarUrl: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
+
+      topProjects = topProjects.map(p => ({
+        ...p,
+        periodVotesCount: p.votesCount,
+      }));
+    } else {
+      // For time-filtered periods, count votes within the timeframe
+      const voteConditions = dateFilter ? [gte(votes.createdAt, dateFilter)] : [];
+
+      const projectVoteCounts = await db
+        .select({
+          projectId: votes.projectId,
+          voteCount: count(),
+        })
+        .from(votes)
+        .where(and(...voteConditions))
+        .groupBy(votes.projectId)
+        .orderBy(desc(count()))
+        .limit(limit);
+
+      if (projectVoteCounts.length === 0) {
+        return success({
+          period,
+          leaderboard: [],
+        });
+      }
+
+      const projectIds = projectVoteCounts.map(p => p.projectId);
+      const voteCountMap = new Map(projectVoteCounts.map(p => [p.projectId, p.voteCount]));
+
+      const projectDetails = await db.query.projects.findMany({
+        where: and(
+          eq(projects.status, 'launched'),
+          sql`${projects.id} IN (${sql.join(projectIds.map(id => sql`${id}`), sql`, `)})`
+        ),
+        with: {
+          creators: {
+            with: {
+              agent: {
+                columns: {
+                  id: true,
+                  username: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const projectMap = new Map(projectDetails.map(p => [p.id, p]));
+
+      // Sort by vote count and filter to only launched projects
+      topProjects = projectVoteCounts
+        .map(vc => {
+          const project = projectMap.get(vc.projectId);
+          if (!project) return null;
+          return {
+            ...project,
+            periodVotesCount: vc.voteCount,
+          };
+        })
+        .filter((p): p is NonNullable<typeof p> => p !== null);
+    }
 
     return success({
       period,
@@ -63,7 +126,8 @@ export async function GET(req: NextRequest) {
           name: p.name,
           tagline: p.tagline,
           logoUrl: p.logoUrl,
-          votesCount: p.votesCount,
+          votesCount: p.periodVotesCount,
+          totalVotesCount: p.votesCount,
           commentsCount: p.commentsCount,
           launchedAt: p.launchedAt,
         },
