@@ -65,7 +65,7 @@ export function ProjectCard({
             )}
             {project.name}
           </h3>
-          <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
+          <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2 sm:line-clamp-1">
             {project.tagline}
           </p>
           {project.categories && project.categories.length > 0 && (
@@ -122,7 +122,7 @@ export function ProjectCard({
           <h3 className="font-semibold text-foreground group-hover:text-accent transition-colors truncate">
             {project.name}
           </h3>
-          <p className="text-sm text-muted-foreground truncate">{project.tagline}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2 sm:line-clamp-1">{project.tagline}</p>
         </Link>
 
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -260,7 +260,7 @@ export function ProjectCard({
             </Badge>
           )}
         </div>
-        <p className="text-sm text-muted-foreground truncate mt-0.5">
+        <p className="text-sm text-muted-foreground line-clamp-2 sm:line-clamp-1 mt-0.5">
           {project.tagline}
         </p>
         <div className="flex items-center gap-3 mt-2">
