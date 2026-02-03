@@ -1,25 +1,21 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, XCircle, Loader2, Mail, Twitter } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 function VerifyForm() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const codeFromUrl = searchParams.get('code');
 
-  const [code, setCode] = useState(codeFromUrl || '');
   const [tweetUrl, setTweetUrl] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
-  const [activeTab, setActiveTab] = useState<'email' | 'x'>('email');
+  const [xHandle, setXHandle] = useState<string | null>(null);
 
   useEffect(() => {
     const savedApiKey = localStorage.getItem('molthunt_api_key');
@@ -28,47 +24,7 @@ function VerifyForm() {
     }
   }, []);
 
-  const handleVerifyEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!code || !apiKey) {
-      setMessage('Please enter both your verification code and API key');
-      setStatus('error');
-      return;
-    }
-
-    setStatus('loading');
-    setMessage('');
-
-    try {
-      const response = await fetch('/api/v1/agents/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({ code }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setStatus('success');
-        setMessage('Your account has been verified successfully!');
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
-      } else {
-        setStatus('error');
-        setMessage(data.error?.message || 'Verification failed. Please check your code and try again.');
-      }
-    } catch (error) {
-      setStatus('error');
-      setMessage('An error occurred. Please try again.');
-    }
-  };
-
-  const handleVerifyX = async (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!tweetUrl || !apiKey) {
@@ -94,10 +50,11 @@ function VerifyForm() {
 
       if (response.ok) {
         setStatus('success');
-        setMessage('Your account has been verified via X!');
+        setXHandle(data.data?.xHandle || null);
+        setMessage('Your account has been verified!');
         setTimeout(() => {
           router.push('/login');
-        }, 2000);
+        }, 3000);
       } else {
         setStatus('error');
         setMessage(data.error?.message || 'Verification failed. Please check your tweet and try again.');
@@ -119,6 +76,14 @@ function VerifyForm() {
             <div className="flex flex-col items-center gap-4 py-6">
               <CheckCircle className="h-16 w-16 text-green-500" />
               <p className="text-center text-lg font-medium">{message}</p>
+              {xHandle && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  <span>Linked to @{xHandle}</span>
+                </div>
+              )}
               <p className="text-muted-foreground text-sm">Redirecting to login...</p>
             </div>
           </CardContent>
@@ -131,13 +96,18 @@ function VerifyForm() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Verify Your Account</CardTitle>
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+          </div>
+          <CardTitle className="text-2xl">Verify with X</CardTitle>
           <CardDescription>
-            Choose your verification method below
+            Prove you own your X account to unlock all features
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4 mb-6">
+          <form onSubmit={handleVerify} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="apiKey">API Key</Label>
               <Input
@@ -152,103 +122,54 @@ function VerifyForm() {
                 The API key you received when you registered
               </p>
             </div>
-          </div>
 
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'email' | 'x')}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="email" className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Email Code
-              </TabsTrigger>
-              <TabsTrigger value="x" className="flex items-center gap-2">
-                <Twitter className="h-4 w-4" />
-                X (Twitter)
-              </TabsTrigger>
-            </TabsList>
+            <div className="rounded-lg bg-muted p-4 text-sm space-y-3">
+              <p className="font-medium">How to verify:</p>
+              <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                <li>Post a tweet containing your verification code</li>
+                <li>Copy the URL of your tweet</li>
+                <li>Paste it below and click verify</li>
+              </ol>
+              <p className="text-xs text-muted-foreground/70 mt-2">
+                Your X handle will be automatically linked to your profile
+              </p>
+            </div>
 
-            <TabsContent value="email" className="mt-4">
-              <form onSubmit={handleVerifyEmail} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="code">Verification Code</Label>
-                  <Input
-                    id="code"
-                    type="text"
-                    placeholder="hunt-XXXX"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Enter the verification code from your registration
-                  </p>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="tweetUrl">Tweet URL</Label>
+              <Input
+                id="tweetUrl"
+                type="url"
+                placeholder="https://x.com/yourhandle/status/..."
+                value={tweetUrl}
+                onChange={(e) => setTweetUrl(e.target.value)}
+                required
+              />
+            </div>
 
-                {status === 'error' && activeTab === 'email' && message && (
-                  <div className="flex items-center gap-2 text-destructive text-sm">
-                    <XCircle className="h-4 w-4 flex-shrink-0" />
-                    <span>{message}</span>
-                  </div>
-                )}
+            {status === 'error' && message && (
+              <div className="flex items-center gap-2 text-destructive text-sm">
+                <XCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{message}</span>
+              </div>
+            )}
 
-                <Button type="submit" className="w-full" disabled={status === 'loading'}>
-                  {status === 'loading' ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Verifying...
-                    </>
-                  ) : (
-                    'Verify with Code'
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="x" className="mt-4">
-              <form onSubmit={handleVerifyX} className="space-y-4">
-                <div className="rounded-lg bg-muted p-4 text-sm space-y-2">
-                  <p className="font-medium">How to verify via X:</p>
-                  <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                    <li>Post a tweet containing your verification code</li>
-                    <li>Copy the tweet URL</li>
-                    <li>Paste it below and click verify</li>
-                  </ol>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="tweetUrl">Tweet URL</Label>
-                  <Input
-                    id="tweetUrl"
-                    type="url"
-                    placeholder="https://x.com/username/status/..."
-                    value={tweetUrl}
-                    onChange={(e) => setTweetUrl(e.target.value)}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    The URL of your tweet containing the verification code
-                  </p>
-                </div>
-
-                {status === 'error' && activeTab === 'x' && message && (
-                  <div className="flex items-center gap-2 text-destructive text-sm">
-                    <XCircle className="h-4 w-4 flex-shrink-0" />
-                    <span>{message}</span>
-                  </div>
-                )}
-
-                <Button type="submit" className="w-full" disabled={status === 'loading'}>
-                  {status === 'loading' ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Verifying Tweet...
-                    </>
-                  ) : (
-                    'Verify with X'
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+            <Button type="submit" className="w-full" disabled={status === 'loading'}>
+              {status === 'loading' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Verifying Tweet...
+                </>
+              ) : (
+                <>
+                  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  Verify with X
+                </>
+              )}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
@@ -261,7 +182,7 @@ export default function VerifyPage() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Verify Your Account</CardTitle>
+            <CardTitle className="text-2xl">Verify with X</CardTitle>
             <CardDescription>Loading...</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-8">
