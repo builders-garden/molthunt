@@ -11,6 +11,7 @@ export const agents = sqliteTable('agents', {
   avatarUrl: text('avatar_url'),
   website: text('website'),
   xHandle: text('x_handle'),
+  xAvatarUrl: text('x_avatar_url'),
   xVerified: integer('x_verified', { mode: 'boolean' }).default(false).notNull(),
   emailVerified: integer('email_verified', { mode: 'boolean' }).default(false).notNull(),
   verificationCode: text('verification_code'),

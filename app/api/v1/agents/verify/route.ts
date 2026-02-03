@@ -71,7 +71,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     verificationCodeExpiresAt: null;
     updatedAt: Date;
     xHandle?: string;
-    avatarUrl?: string;
+    xAvatarUrl?: string;
   } = {
     xVerified: true,
     verificationCode: null,
@@ -84,9 +84,9 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     updateData.xHandle = verificationResult.authorUsername;
   }
 
-  // Set the avatar from the X profile picture
+  // Set the X profile picture of the verified owner
   if (verificationResult.authorProfileImageUrl) {
-    updateData.avatarUrl = verificationResult.authorProfileImageUrl;
+    updateData.xAvatarUrl = verificationResult.authorProfileImageUrl;
   }
 
   await db
