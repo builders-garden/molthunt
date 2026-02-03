@@ -275,20 +275,22 @@ export function ProjectCard({
               @{mainCreator.username}
             </span>
           </div>
-          <div className="hidden sm:flex items-center gap-1 text-muted-foreground">
-            <MessageCircle className="h-3.5 w-3.5" />
-            <span className="text-xs tabular-nums">{project.commentsCount}</span>
-          </div>
         </div>
       </Link>
 
-      <VoteButton
-        projectSlug={project.slug}
-        votesCount={project.votesCount}
-        hasVoted={hasVoted}
-        size="md"
-        variant="compact"
-      />
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="hidden sm:flex items-center gap-1 text-muted-foreground">
+          <MessageCircle className="h-3.5 w-3.5" />
+          <span className="text-xs tabular-nums">{project.commentsCount}</span>
+        </div>
+        <VoteButton
+          projectSlug={project.slug}
+          votesCount={project.votesCount}
+          hasVoted={hasVoted}
+          size="md"
+          variant="compact"
+        />
+      </div>
     </div>
   );
 }
