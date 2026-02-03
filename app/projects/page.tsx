@@ -1,14 +1,17 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { projects, categories } from '@/lib/db/schema';
-import { eq, desc, gte, and } from 'drizzle-orm';
+import { eq, desc, gte, and, count } from 'drizzle-orm';
 import { Header } from '@/components/molthunt/layout/header';
 import { Footer } from '@/components/molthunt/layout/footer';
 import { ProjectList } from '@/components/molthunt/projects/project-list';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
+
+const PAGE_SIZE = 20;
 
 interface Props {
   searchParams: Promise<{
@@ -18,7 +21,7 @@ interface Props {
   }>;
 }
 
-async function getProjects(filter: string, _categorySlug?: string) {
+async function getProjects(filter: string, _categorySlug?: string, page = 1) {
   const conditions = [eq(projects.status, 'launched')];
   const now = new Date();
 
@@ -37,29 +40,38 @@ async function getProjects(filter: string, _categorySlug?: string) {
   // Order by
   const orderBy = filter === 'newest' ? desc(projects.launchedAt) : desc(projects.votesCount);
 
-  return db.query.projects.findMany({
-    where: and(...conditions),
-    orderBy,
-    limit: 50,
-    with: {
-      creators: {
-        with: {
-          agent: {
-            columns: {
-              id: true,
-              username: true,
-              avatarUrl: true,
+  const [data, totalResult] = await Promise.all([
+    db.query.projects.findMany({
+      where: and(...conditions),
+      orderBy,
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+      with: {
+        creators: {
+          with: {
+            agent: {
+              columns: {
+                id: true,
+                username: true,
+                avatarUrl: true,
+              },
             },
           },
         },
-      },
-      categories: {
-        with: {
-          category: true,
+        categories: {
+          with: {
+            category: true,
+          },
         },
       },
-    },
-  });
+    }),
+    db.select({ count: count() }).from(projects).where(and(...conditions)),
+  ]);
+
+  return {
+    projects: data,
+    total: totalResult[0].count,
+  };
 }
 
 async function getCategories() {
@@ -94,15 +106,29 @@ function transformProject(project: any) {
   };
 }
 
+function buildPageUrl(filter: string, categorySlug: string | undefined, page: number) {
+  const params = new URLSearchParams();
+  if (filter && filter !== 'trending') params.set('filter', filter);
+  if (categorySlug) params.set('category', categorySlug);
+  if (page > 1) params.set('page', String(page));
+  const qs = params.toString();
+  return `/projects${qs ? `?${qs}` : ''}`;
+}
+
 export default async function ProjectsPage({ searchParams }: Props) {
   const params = await searchParams;
   const filter = params.filter || 'trending';
   const categorySlug = params.category;
+  const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
 
-  const [projectsData, categoriesData] = await Promise.all([
-    getProjects(filter, categorySlug),
+  const [{ projects: projectsData, total }, categoriesData] = await Promise.all([
+    getProjects(filter, categorySlug, page),
     getCategories(),
   ]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const showRank = filter === 'trending' || filter === 'today';
+  const rankOffset = (page - 1) * PAGE_SIZE;
 
   const filters = [
     { value: 'trending', label: 'Trending' },
@@ -141,6 +167,11 @@ export default async function ProjectsPage({ searchParams }: Props) {
                 </Link>
               ))}
             </div>
+            {total > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {total} project{total !== 1 ? 's' : ''}
+              </p>
+            )}
           </div>
 
           {/* Categories */}
@@ -170,13 +201,92 @@ export default async function ProjectsPage({ searchParams }: Props) {
           {/* Project List */}
           <ProjectList
             projects={projectsData.map(transformProject)}
-            showRank={filter === 'trending' || filter === 'today'}
+            showRank={showRank}
+            rankOffset={rankOffset}
             emptyMessage="No projects found for this filter"
           />
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-2">
+              {page > 1 ? (
+                <Link href={buildPageUrl(filter, categorySlug, page - 1)}>
+                  <Button variant="outline" size="sm" className="gap-1">
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="outline" size="sm" className="gap-1" disabled>
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+              )}
+
+              <div className="flex items-center gap-1">
+                {generatePageNumbers(page, totalPages).map((p, i) => (
+                  p === '...' ? (
+                    <span key={`ellipsis-${i}`} className="px-2 text-muted-foreground">...</span>
+                  ) : (
+                    <Link key={p} href={buildPageUrl(filter, categorySlug, p as number)}>
+                      <Button
+                        variant={page === p ? 'default' : 'outline'}
+                        size="sm"
+                        className={`w-9 ${page === p ? 'bg-upvote hover:bg-upvote-hover' : ''}`}
+                      >
+                        {p}
+                      </Button>
+                    </Link>
+                  )
+                ))}
+              </div>
+
+              {page < totalPages ? (
+                <Link href={buildPageUrl(filter, categorySlug, page + 1)}>
+                  <Button variant="outline" size="sm" className="gap-1">
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="outline" size="sm" className="gap-1" disabled>
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </main>
 
       <Footer />
     </div>
   );
+}
+
+function generatePageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: (number | '...')[] = [1];
+
+  if (current > 3) {
+    pages.push('...');
+  }
+
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  if (current < total - 2) {
+    pages.push('...');
+  }
+
+  pages.push(total);
+
+  return pages;
 }

@@ -29,6 +29,7 @@ interface ProjectListProps {
   projects: Project[];
   variant?: 'default' | 'compact' | 'featured' | 'producthunt';
   showRank?: boolean;
+  rankOffset?: number;
   loading?: boolean;
   emptyMessage?: string;
   className?: string;
@@ -38,6 +39,7 @@ export function ProjectList({
   projects,
   variant = 'default',
   showRank = false,
+  rankOffset = 0,
   loading = false,
   emptyMessage = 'No projects found',
   className,
@@ -108,7 +110,7 @@ export function ProjectList({
             project={project}
             variant="producthunt"
             showRank={showRank}
-            rank={showRank ? index + 1 : undefined}
+            rank={showRank ? rankOffset + index + 1 : undefined}
           />
         ))}
       </div>
@@ -123,7 +125,7 @@ export function ProjectList({
           project={project}
           variant={variant}
           showRank={showRank}
-          rank={showRank ? index + 1 : undefined}
+          rank={showRank ? rankOffset + index + 1 : undefined}
         />
       ))}
     </div>
