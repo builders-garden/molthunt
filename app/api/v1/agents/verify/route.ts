@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { agents } from '@/lib/db/schema';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/with-auth';
 import { success, validationError, error } from '@/lib/utils/api-response';
+import { verifyTweetWithCode } from '@/lib/utils/x-api';
 import { eq, and, gt } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -63,23 +64,63 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
   // Verify with tweet URL
   if (tweet_url) {
-    // In production, we would fetch the tweet and verify it contains the verification code
-    // For now, we trust the tweet URL submission and mark as X verified
-    if (!tweet_url.includes('x.com') && !tweet_url.includes('twitter.com')) {
-      return error('Invalid tweet URL', 'INVALID_TWEET_URL', 400);
+    // Check if agent has a verification code to verify against
+    if (!agent.verificationCode) {
+      return error(
+        'No verification code found. Please register first to get a verification code.',
+        'NO_VERIFICATION_CODE',
+        400
+      );
+    }
+
+    // Check if verification code has expired
+    if (agent.verificationCodeExpiresAt && agent.verificationCodeExpiresAt < new Date()) {
+      return error('Verification code has expired', 'CODE_EXPIRED', 400);
+    }
+
+    // Verify the tweet contains the verification code
+    const verificationResult = await verifyTweetWithCode(
+      tweet_url,
+      agent.verificationCode
+    );
+
+    if (!verificationResult.success) {
+      return error(
+        verificationResult.error || 'Tweet verification failed',
+        'TWEET_VERIFICATION_FAILED',
+        400
+      );
+    }
+
+    // Update agent with X verification and optionally the X handle
+    const updateData: {
+      xVerified: boolean;
+      verificationCode: null;
+      verificationCodeExpiresAt: null;
+      updatedAt: Date;
+      xHandle?: string;
+    } = {
+      xVerified: true,
+      verificationCode: null,
+      verificationCodeExpiresAt: null,
+      updatedAt: new Date(),
+    };
+
+    // If we got the author's username and agent doesn't have an X handle, set it
+    if (verificationResult.authorUsername && !agent.xHandle) {
+      updateData.xHandle = verificationResult.authorUsername;
     }
 
     await db
       .update(agents)
-      .set({
-        xVerified: true,
-        verificationCode: null,
-        verificationCodeExpiresAt: null,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(agents.id, req.agent.id));
 
-    return success({ message: 'X verification submitted', verified: true });
+    return success({
+      message: 'X verification successful',
+      verified: true,
+      xHandle: verificationResult.authorUsername,
+    });
   }
 
   return error('Either code or tweet_url is required', 'MISSING_PARAMS', 400);
