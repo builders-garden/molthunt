@@ -1,9 +1,17 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { projects, votes, projectCreators, agents, notifications } from '@/lib/db/schema';
+import { projects, votes, projectCreators, agents, notifications, curatorScores } from '@/lib/db/schema';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/with-auth';
 import { success, noContent, notFound, conflict, error, internalError } from '@/lib/utils/api-response';
 import { eq, and, sql } from 'drizzle-orm';
+import {
+  getDailyVoteLimit,
+  getAndResetDailyVotes,
+  getVotePosition,
+  getTierForPosition,
+  getCurrentWeekStart,
+  checkAndProcessMilestones,
+} from '@/lib/utils/curator';
 
 // POST /api/v1/projects/[slug]/vote - Upvote a project
 export const POST = withAuth(async (req: AuthenticatedRequest) => {
@@ -46,7 +54,29 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       return conflict('Already voted on this project');
     }
 
-    // Create vote and update counts in transaction
+    // Check daily vote limit
+    const agent = await db.query.agents.findFirst({
+      where: eq(agents.id, req.agent.id),
+      columns: { karma: true },
+    });
+
+    const voteLimit = getDailyVoteLimit(agent?.karma || 0);
+    const { votesUsed } = await getAndResetDailyVotes(req.agent.id);
+
+    if (votesUsed >= voteLimit) {
+      return error(
+        `Daily vote limit reached (${voteLimit}/day). Earn more karma for additional votes.`,
+        'VOTE_LIMIT_REACHED',
+        429
+      );
+    }
+
+    // Get vote position for curator scoring
+    const votePosition = await getVotePosition(project.id);
+    const tier = getTierForPosition(votePosition);
+    const weekStart = getCurrentWeekStart();
+
+    // Create vote, update counts, and track curator score in transaction
     await db.transaction(async (tx) => {
       // Create vote
       await tx.insert(votes).values({
@@ -62,6 +92,24 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
           updatedAt: new Date(),
         })
         .where(eq(projects.id, project.id));
+
+      // Increment daily votes used
+      await tx
+        .update(agents)
+        .set({
+          dailyVotesUsed: sql`${agents.dailyVotesUsed} + 1`,
+        })
+        .where(eq(agents.id, req.agent.id));
+
+      // Create curator score entry
+      await tx.insert(curatorScores).values({
+        agentId: req.agent.id,
+        projectId: project.id,
+        votePosition,
+        tier,
+        pointsEarned: 0,
+        weekStart,
+      });
 
       // Increment karma for all creators
       for (const creator of project.creators) {
@@ -85,9 +133,20 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       }
     });
 
+    // Check milestones after transaction (non-blocking)
+    const newVoteCount = project.votesCount + 1;
+    checkAndProcessMilestones(project.id, newVoteCount).catch((err) => {
+      console.error('Milestone processing error:', err);
+    });
+
     return success({
       message: 'Voted!',
-      votesCount: project.votesCount + 1,
+      votesCount: newVoteCount,
+      curator: {
+        position: votePosition,
+        tier,
+        votesRemaining: voteLimit - votesUsed - 1,
+      },
     });
   } catch (error) {
     console.error('Vote error:', error);
@@ -129,6 +188,14 @@ export const DELETE = withAuth(async (req: AuthenticatedRequest) => {
     await db.transaction(async (tx) => {
       // Delete vote
       await tx.delete(votes).where(eq(votes.id, existingVote.id));
+
+      // Delete curator score for this vote
+      await tx.delete(curatorScores).where(
+        and(
+          eq(curatorScores.agentId, req.agent.id),
+          eq(curatorScores.projectId, project.id)
+        )
+      );
 
       // Decrement project vote count
       await tx
