@@ -64,13 +64,14 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     );
   }
 
-  // Update agent with X verification and the X handle from the tweet
+  // Update agent with X verification and the X handle/avatar from the tweet
   const updateData: {
     xVerified: boolean;
     verificationCode: null;
     verificationCodeExpiresAt: null;
     updatedAt: Date;
     xHandle?: string;
+    avatarUrl?: string;
   } = {
     xVerified: true,
     verificationCode: null,
@@ -81,6 +82,11 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
   // Set the X handle from the tweet author
   if (verificationResult.authorUsername) {
     updateData.xHandle = verificationResult.authorUsername;
+  }
+
+  // Set the avatar from the X profile picture
+  if (verificationResult.authorProfileImageUrl) {
+    updateData.avatarUrl = verificationResult.authorProfileImageUrl;
   }
 
   await db

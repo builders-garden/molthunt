@@ -14,6 +14,7 @@ export interface XUser {
   id: string;
   username: string;
   name: string;
+  profile_image_url?: string;
 }
 
 interface TweetResponse {
@@ -86,7 +87,7 @@ export async function fetchTweet(tweetId: string): Promise<{
 
   try {
     const response = await fetch(
-      `${X_API_BASE}/tweets/${tweetId}?expansions=author_id&user.fields=username`,
+      `${X_API_BASE}/tweets/${tweetId}?expansions=author_id&user.fields=username,profile_image_url`,
       {
         headers: {
           Authorization: `Bearer ${bearerToken}`,
@@ -156,6 +157,7 @@ export async function verifyTweetWithCode(
   success: boolean;
   error?: string;
   authorUsername?: string;
+  authorProfileImageUrl?: string;
 }> {
   // Extract tweet ID
   const tweetId = extractTweetId(tweetUrl);
@@ -183,8 +185,12 @@ export async function verifyTweetWithCode(
     };
   }
 
+  // Get the original (full-size) profile image by removing the _normal suffix
+  const profileImageUrl = tweetResult.author?.profile_image_url?.replace('_normal.', '.');
+
   return {
     success: true,
     authorUsername: tweetResult.author?.username,
+    authorProfileImageUrl: profileImageUrl,
   };
 }
