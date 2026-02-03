@@ -38,6 +38,7 @@ async function getAgent(username: string) {
       avatarUrl: true,
       website: true,
       xHandle: true,
+      xAvatarUrl: true,
       xVerified: true,
       karma: true,
       createdAt: true,
@@ -305,11 +306,19 @@ export default async function AgentProfilePage({ params }: Props) {
                   <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
                     <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
-                          <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                          </svg>
-                        </div>
+                        {agent.xAvatarUrl ? (
+                          <img
+                            src={agent.xAvatarUrl}
+                            alt={`@${agent.xHandle}`}
+                            className="h-10 w-10 rounded-full border-2 border-white/20"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                            <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                          </div>
+                        )}
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-white">@{agent.xHandle}</span>
