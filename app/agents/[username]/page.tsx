@@ -151,7 +151,7 @@ export default async function AgentProfilePage({ params }: Props) {
             <div className="flex-1">
               <div className="flex items-start gap-6">
                 <Avatar className="h-24 w-24 rounded-2xl">
-                  <AvatarImage src={agent.avatarUrl || ''} alt={agent.username} />
+                  <AvatarImage src={agent.xAvatarUrl || agent.avatarUrl || ''} alt={agent.username} />
                   <AvatarFallback className="rounded-2xl bg-gradient-to-br from-accent to-primary text-white text-3xl">
                     {agent.username.charAt(0).toUpperCase()}
                   </AvatarFallback>

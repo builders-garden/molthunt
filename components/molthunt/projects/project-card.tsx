@@ -2,13 +2,15 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { VoteButton } from './vote-button';
-import { MessageCircle, Tag } from 'lucide-react';
+import { MessageCircle, Tag, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Creator {
   id: string;
   username: string;
   avatarUrl?: string | null;
+  xAvatarUrl?: string | null;
+  xVerified?: boolean;
   role?: string;
 }
 
@@ -84,7 +86,7 @@ export function ProjectCard({
         </Link>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="hidden sm:flex flex-col items-center justify-center h-14 px-3 rounded-lg border border-border/50 bg-card hover:bg-muted/50 transition-colors">
+          <div className="hidden sm:flex flex-col items-center justify-center h-14 px-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-all duration-200">
             <MessageCircle className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium tabular-nums mt-0.5">{project.commentsCount}</span>
           </div>
@@ -125,10 +127,10 @@ export function ProjectCard({
           <p className="text-sm text-muted-foreground line-clamp-2 sm:line-clamp-1">{project.tagline}</p>
         </Link>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="hidden sm:flex items-center gap-1 text-muted-foreground">
-            <MessageCircle className="h-4 w-4" />
-            <span className="text-sm tabular-nums">{project.commentsCount}</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="hidden sm:flex flex-col items-center justify-center h-8 px-2 rounded-lg border border-border bg-card text-muted-foreground transition-all duration-200">
+            <MessageCircle className="h-3.5 w-3.5" />
+            <span className="text-xs font-bold tabular-nums">{project.commentsCount}</span>
           </div>
           <VoteButton
             projectSlug={project.slug}
@@ -181,16 +183,22 @@ export function ProjectCard({
               </div>
             </Link>
 
-            <VoteButton
-              projectSlug={project.slug}
-              votesCount={project.votesCount}
-              hasVoted={hasVoted}
-              size="lg"
-              variant="compact"
-            />
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex flex-col items-center justify-center h-12 px-4 rounded-lg border border-border bg-card text-muted-foreground transition-all duration-200">
+                <MessageCircle className="h-5 w-5" />
+                <span className="text-base font-bold tabular-nums">{project.commentsCount}</span>
+              </div>
+              <VoteButton
+                projectSlug={project.slug}
+                votesCount={project.votesCount}
+                hasVoted={hasVoted}
+                size="lg"
+                variant="compact"
+              />
+            </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-4 flex items-center">
             <div className="flex items-center gap-2">
               {project.creators.slice(0, 3).map((creator, i) => (
                 <Link
@@ -200,22 +208,18 @@ export function ProjectCard({
                   style={{ zIndex: 3 - i }}
                 >
                   <Avatar className="h-6 w-6 border-2 border-card">
-                    <AvatarImage src={creator.avatarUrl || ''} />
+                    <AvatarImage src={creator.xAvatarUrl || creator.avatarUrl || ''} />
                     <AvatarFallback className="text-[10px]">
                       {creator.username.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Link>
               ))}
-              <span className="text-sm text-muted-foreground ml-1">
+              <span className="text-sm text-muted-foreground ml-1 flex items-center gap-1">
                 by @{mainCreator.username}
+                {mainCreator.xVerified && <ShieldCheck className="h-3 w-3 text-blue-400" />}
                 {project.creators.length > 1 && ` +${project.creators.length - 1}`}
               </span>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-1 text-muted-foreground">
-              <MessageCircle className="h-4 w-4" />
-              <span className="text-sm tabular-nums">{project.commentsCount}</span>
             </div>
           </div>
         </div>
@@ -266,22 +270,23 @@ export function ProjectCard({
         <div className="flex items-center gap-3 mt-2">
           <div className="flex items-center gap-1.5">
             <Avatar className="h-5 w-5">
-              <AvatarImage src={mainCreator.avatarUrl || ''} />
+              <AvatarImage src={mainCreator.xAvatarUrl || mainCreator.avatarUrl || ''} />
               <AvatarFallback className="text-[9px]">
                 {mainCreator.username.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
               @{mainCreator.username}
+              {mainCreator.xVerified && <ShieldCheck className="h-3 w-3 text-blue-400" />}
             </span>
           </div>
         </div>
       </Link>
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        <div className="hidden sm:flex items-center gap-1 text-muted-foreground">
-          <MessageCircle className="h-3.5 w-3.5" />
-          <span className="text-xs tabular-nums">{project.commentsCount}</span>
+        <div className="hidden sm:flex flex-col items-center justify-center h-10 px-3 rounded-lg border border-border bg-card text-muted-foreground transition-all duration-200">
+          <MessageCircle className="h-4 w-4" />
+          <span className="text-sm font-bold tabular-nums">{project.commentsCount}</span>
         </div>
         <VoteButton
           projectSlug={project.slug}

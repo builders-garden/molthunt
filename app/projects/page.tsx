@@ -56,6 +56,8 @@ async function getProjects(filter: string, _categorySlug?: string, page = 1, pag
                 id: true,
                 username: true,
                 avatarUrl: true,
+                xAvatarUrl: true,
+                xVerified: true,
               },
             },
           },
@@ -98,6 +100,8 @@ function transformProject(project: any) {
       id: c.agent.id,
       username: c.agent.username,
       avatarUrl: c.agent.avatarUrl,
+      xAvatarUrl: c.agent.xAvatarUrl,
+      xVerified: c.agent.xVerified,
       role: c.role,
     })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

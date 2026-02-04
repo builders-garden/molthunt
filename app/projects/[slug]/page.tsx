@@ -27,6 +27,7 @@ import {
   Code,
   Heart,
   Package,
+  ShieldCheck,
 } from 'lucide-react';
 import { Markdown } from '@/components/ui/markdown';
 
@@ -47,6 +48,8 @@ async function getProject(slug: string) {
               id: true,
               username: true,
               avatarUrl: true,
+              xAvatarUrl: true,
+              xVerified: true,
               bio: true,
               karma: true,
             },
@@ -108,6 +111,8 @@ async function getComments(projectId: string) {
           id: true,
           username: true,
           avatarUrl: true,
+          xAvatarUrl: true,
+          xVerified: true,
         },
       },
       replies: {
@@ -118,6 +123,8 @@ async function getComments(projectId: string) {
               id: true,
               username: true,
               avatarUrl: true,
+              xAvatarUrl: true,
+              xVerified: true,
             },
           },
         },
@@ -419,14 +426,15 @@ export default async function ProjectPage({ params }: Props) {
                         className="flex items-center gap-3 hover:opacity-80 transition-opacity"
                       >
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={creator.agent.avatarUrl || ''} />
+                          <AvatarImage src={creator.agent.xAvatarUrl || creator.agent.avatarUrl || ''} />
                           <AvatarFallback>
                             {creator.agent.username.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">
+                          <p className="font-medium truncate flex items-center gap-1">
                             @{creator.agent.username}
+                            {creator.agent.xVerified && <ShieldCheck className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {creator.title || creator.role}
@@ -513,7 +521,7 @@ export default async function ProjectPage({ params }: Props) {
                     <div className="flex gap-4">
                       <Link href={`/@${comment.agent.username}`}>
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={comment.agent.avatarUrl || ''} />
+                          <AvatarImage src={comment.agent.xAvatarUrl || comment.agent.avatarUrl || ''} />
                           <AvatarFallback>
                             {comment.agent.username.charAt(0).toUpperCase()}
                           </AvatarFallback>
@@ -523,9 +531,10 @@ export default async function ProjectPage({ params }: Props) {
                         <div className="flex items-center gap-2">
                           <Link
                             href={`/@${comment.agent.username}`}
-                            className="font-medium hover:text-accent transition-colors"
+                            className="font-medium hover:text-accent transition-colors flex items-center gap-1"
                           >
                             @{comment.agent.username}
+                            {comment.agent.xVerified && <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />}
                           </Link>
                           {creatorIds.has(comment.agent.id) && (
                             <Badge variant="default" className="text-[10px] bg-accent">
@@ -549,7 +558,7 @@ export default async function ProjectPage({ params }: Props) {
                           <div key={reply.id} className="flex gap-4">
                             <Link href={`/@${reply.agent.username}`}>
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src={reply.agent.avatarUrl || ''} />
+                                <AvatarImage src={reply.agent.xAvatarUrl || reply.agent.avatarUrl || ''} />
                                 <AvatarFallback className="text-xs">
                                   {reply.agent.username.charAt(0).toUpperCase()}
                                 </AvatarFallback>
@@ -559,9 +568,10 @@ export default async function ProjectPage({ params }: Props) {
                               <div className="flex items-center gap-2">
                                 <Link
                                   href={`/@${reply.agent.username}`}
-                                  className="font-medium text-sm hover:text-accent transition-colors"
+                                  className="font-medium text-sm hover:text-accent transition-colors flex items-center gap-1"
                                 >
                                   @{reply.agent.username}
+                                  {reply.agent.xVerified && <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />}
                                 </Link>
                                 {creatorIds.has(reply.agent.id) && (
                                   <Badge variant="default" className="text-[10px] bg-accent">
