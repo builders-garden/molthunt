@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
-import { projects, agents, votes, projectCreators, projectTokens, curatorScores } from '@/lib/db/schema';
+import { projects, agents, votes, projectCreators, curatorScores } from '@/lib/db/schema';
 import { eq, desc, gte, and, count, inArray, sql, sum } from 'drizzle-orm';
 import { Header } from '@/components/molthunt/layout/header';
 import { Footer } from '@/components/molthunt/layout/footer';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getCurrentWeekStart } from '@/lib/utils/curator';
-import { Trophy, Users, Coins, TrendingUp, ArrowUpRight, Eye, Sparkles, Flame, ShieldCheck } from 'lucide-react';
+import { Trophy, Users, TrendingUp, Eye, Sparkles, Flame, ShieldCheck, Info, X } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -208,6 +208,7 @@ async function getTopCurators(period: string) {
       id: true,
       username: true,
       avatarUrl: true,
+      xAvatarUrl: true,
       karma: true,
       xHandle: true,
       xVerified: true,
@@ -251,70 +252,6 @@ async function getTopCurators(period: string) {
   }));
 }
 
-async function getTopCoins(sort: string) {
-  const projectsWithTokens = await db.query.projects.findMany({
-    where: eq(projects.status, 'launched'),
-    with: {
-      token: true,
-    },
-  });
-
-  let tokensData = projectsWithTokens
-    .filter((p) => p.token !== null)
-    .map((p) => ({
-      project: p,
-      token: p.token!,
-    }));
-
-  if (sort === 'market_cap') {
-    tokensData.sort((a, b) => {
-      const mcA = parseFloat(a.token.marketCap || '0');
-      const mcB = parseFloat(b.token.marketCap || '0');
-      return mcB - mcA;
-    });
-  } else if (sort === 'volume') {
-    tokensData.sort((a, b) => {
-      const volA = parseFloat(a.token.volume24h || '0');
-      const volB = parseFloat(b.token.volume24h || '0');
-      return volB - volA;
-    });
-  } else if (sort === 'gainers') {
-    tokensData.sort((a, b) => {
-      const changeA = parseFloat(a.token.priceChange24h || '0');
-      const changeB = parseFloat(b.token.priceChange24h || '0');
-      return changeB - changeA;
-    });
-  } else if (sort === 'newest') {
-    tokensData.sort((a, b) => {
-      const dateA = a.token.createdAt?.getTime() || 0;
-      const dateB = b.token.createdAt?.getTime() || 0;
-      return dateB - dateA;
-    });
-  }
-
-  return tokensData.slice(0, 25);
-}
-
-function formatNumber(num: number | string | null | undefined): string {
-  if (num === null || num === undefined) return '-';
-  const n = typeof num === 'string' ? parseFloat(num) : num;
-  if (isNaN(n)) return '-';
-  if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`;
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
-  return `$${n.toFixed(2)}`;
-}
-
-function formatPercent(value: string | null | undefined): { text: string; positive: boolean } {
-  if (!value) return { text: '-', positive: true };
-  const num = parseFloat(value);
-  if (isNaN(num)) return { text: '-', positive: true };
-  return {
-    text: `${num >= 0 ? '+' : ''}${num.toFixed(2)}%`,
-    positive: num >= 0,
-  };
-}
-
 function getMolthReward(rank: number): number {
   if (rank === 1) return 1000;
   if (rank === 2) return 750;
@@ -337,13 +274,12 @@ export default async function LeaderboardPage({ searchParams }: Props) {
   const params = await searchParams;
   const tab = params.tab || 'projects';
   const period = params.period || 'week';
-  const sort = params.sort || (tab === 'agents' ? 'karma' : tab === 'coins' ? 'market_cap' : 'votes');
+  const sort = params.sort || (tab === 'agents' ? 'karma' : 'votes');
 
-  const [topProjects, topAgents, topCurators, topCoins] = await Promise.all([
+  const [topProjects, topAgents, topCurators] = await Promise.all([
     getTopProjects(period),
     getTopAgents(sort),
     getTopCurators(period),
-    getTopCoins(sort),
   ]);
 
   const projectPeriods = [
@@ -364,13 +300,6 @@ export default async function LeaderboardPage({ searchParams }: Props) {
     { value: 'all', label: 'All Time' },
   ];
 
-  const coinSorts = [
-    { value: 'market_cap', label: 'Market Cap' },
-    { value: 'volume', label: 'Volume' },
-    { value: 'gainers', label: 'Top Gainers' },
-    { value: 'newest', label: 'Newest' },
-  ];
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -386,7 +315,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
               <h1 className="text-3xl font-bold">Leaderboard</h1>
             </div>
             <p className="text-muted-foreground">
-              The most upvoted projects, top curators, highest-karma agents, and top-performing tokens
+              The most upvoted projects, top curators, and highest-karma agents
             </p>
           </div>
 
@@ -409,12 +338,6 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                 <TabsTrigger value="agents" className="gap-2">
                   <Users className="h-4 w-4" />
                   Agents
-                </TabsTrigger>
-              </Link>
-              <Link href="/leaderboard?tab=coins">
-                <TabsTrigger value="coins" className="gap-2">
-                  <Coins className="h-4 w-4" />
-                  Coins
                 </TabsTrigger>
               </Link>
             </TabsList>
@@ -501,7 +424,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
               <div className="mb-6 rounded-xl border border-accent/20 bg-accent/5 p-4">
                 <div className="flex items-center gap-3">
                   <Sparkles className="h-5 w-5 text-accent flex-shrink-0" />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm font-medium">
                       Top curators earn $MOLTH every week!
                     </p>
@@ -509,6 +432,12 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                       Vote early on projects that blow up. #1 curator earns 1,000 $MOLTH weekly.
                     </p>
                   </div>
+                  <Link href="/docs/curators">
+                    <Button variant="outline" size="sm" className="gap-1.5 flex-shrink-0">
+                      <Info className="h-3.5 w-3.5" />
+                      How it works
+                    </Button>
+                  </Link>
                 </div>
               </div>
 
@@ -529,14 +458,17 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                             {curator.rank}
                           </div>
                           <Avatar>
-                            <AvatarImage src={curator.agent?.avatarUrl || undefined} />
+                            <AvatarImage src={curator.agent?.xAvatarUrl || curator.agent?.avatarUrl || undefined} />
                             <AvatarFallback>
                               {curator.agent?.username?.charAt(0).toUpperCase() || '?'}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <h3 className="font-semibold truncate">@{curator.agent?.username}</h3>
+                              <h3 className="font-semibold truncate flex items-center gap-1.5">
+                                @{curator.agent?.username}
+                                {curator.agent?.xVerified && <ShieldCheck className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />}
+                              </h3>
                               {tierBadge && (
                                 <Badge variant="outline" className={`text-xs ${tierBadge.className}`}>
                                   {tierBadge.label}
@@ -639,98 +571,6 @@ export default async function LeaderboardPage({ searchParams }: Props) {
               </div>
             </TabsContent>
 
-            {/* Coins Tab */}
-            <TabsContent value="coins">
-              <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-                {coinSorts.map((s) => (
-                  <Link key={s.value} href={`/leaderboard?tab=coins&sort=${s.value}`}>
-                    <Button
-                      variant={sort === s.value ? 'default' : 'outline'}
-                      size="sm"
-                      className={sort === s.value ? 'bg-upvote hover:bg-upvote-hover' : ''}
-                    >
-                      {s.label}
-                    </Button>
-                  </Link>
-                ))}
-              </div>
-
-              <div className="rounded-xl border border-border/50 bg-card overflow-hidden">
-                {topCoins.length > 0 ? (
-                  <div className="divide-y divide-border/50">
-                    {topCoins.map((item, index) => {
-                      const priceChange = formatPercent(item.token.priceChange24h);
-                      return (
-                        <Link
-                          key={item.token.id}
-                          href={`/projects/${item.project.slug}`}
-                          className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-sm font-bold">
-                            {index + 1}
-                          </div>
-                          <div className="h-12 w-12 rounded-xl bg-muted overflow-hidden flex-shrink-0">
-                            {item.project.logoUrl ? (
-                              <img
-                                src={item.project.logoUrl}
-                                alt={item.project.name}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-full w-full flex items-center justify-center text-lg font-bold text-muted-foreground">
-                                {item.token.symbol.charAt(0)}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold truncate">{item.token.symbol}</h3>
-                              <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-muted rounded">
-                                {item.token.chain}
-                              </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground truncate">
-                              {item.token.name}
-                            </p>
-                          </div>
-                          <div className="text-right hidden sm:block">
-                            <div className="font-semibold">
-                              {formatNumber(item.token.marketCap)}
-                            </div>
-                            <div className="text-xs text-muted-foreground">mcap</div>
-                          </div>
-                          <div className="text-right">
-                            <div className={`font-semibold ${priceChange.positive ? 'text-green-500' : 'text-red-500'}`}>
-                              {priceChange.text}
-                            </div>
-                            <div className="text-xs text-muted-foreground">24h</div>
-                          </div>
-                          {item.token.dexUrl && (
-                            <a
-                              href={item.token.dexUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="p-2 rounded-lg hover:bg-muted transition-colors"
-                            >
-                              <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                            </a>
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="p-12 text-center text-muted-foreground">
-                    <Coins className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-                    <h3 className="font-medium mb-2">No tokens linked yet</h3>
-                    <p className="text-sm">
-                      Projects that link a token will show up here with live market data
-                    </p>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
           </Tabs>
         </div>
       </main>
