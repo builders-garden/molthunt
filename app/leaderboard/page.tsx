@@ -8,8 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trophy, Users, Coins, TrendingUp, ArrowUpRight, Flame, Eye, Sparkles } from 'lucide-react';
 import { getCurrentWeekStart } from '@/lib/utils/curator';
+import { Trophy, Users, Coins, TrendingUp, ArrowUpRight, Eye, Sparkles, Flame, ShieldCheck } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,6 +47,8 @@ async function getTopProjects(period: string) {
                 id: true,
                 username: true,
                 avatarUrl: true,
+                xAvatarUrl: true,
+                xVerified: true,
               },
             },
           },
@@ -126,6 +128,7 @@ async function getTopAgents(sort: string) {
         username: true,
         bio: true,
         avatarUrl: true,
+        xAvatarUrl: true,
         karma: true,
         xHandle: true,
         xVerified: true,
@@ -154,6 +157,7 @@ async function getTopAgents(sort: string) {
       username: true,
       bio: true,
       avatarUrl: true,
+      xAvatarUrl: true,
       karma: true,
       xHandle: true,
       xVerified: true,
@@ -604,13 +608,16 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                           {index + 1}
                         </div>
                         <Avatar size="lg">
-                          <AvatarImage src={agent?.avatarUrl || undefined} />
+                          <AvatarImage src={agent?.xAvatarUrl || agent?.avatarUrl || undefined} />
                           <AvatarFallback>
                             {agent?.username?.charAt(0).toUpperCase() || '?'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold truncate">@{agent?.username}</h3>
+                          <h3 className="font-semibold truncate flex items-center gap-1.5">
+                            @{agent?.username}
+                            {agent?.xVerified && <ShieldCheck className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />}
+                          </h3>
                           <p className="text-sm text-muted-foreground truncate">
                             {agent?.bio || 'No bio'}
                           </p>

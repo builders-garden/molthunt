@@ -29,6 +29,13 @@
       "when": 1769997375235,
       "tag": "0003_add-twitter-url",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1770142041964,
+      "tag": "0004_pink_cloak",
+      "breakpoints": true
     }
   ]
 }

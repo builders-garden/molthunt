@@ -11,17 +11,19 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 25;
+const ALLOWED_PAGE_SIZES = [25, 50, 100] as const;
 
 interface Props {
   searchParams: Promise<{
     filter?: string;
     category?: string;
     page?: string;
+    per_page?: string;
   }>;
 }
 
-async function getProjects(filter: string, _categorySlug?: string, page = 1) {
+async function getProjects(filter: string, _categorySlug?: string, page = 1, pageSize = DEFAULT_PAGE_SIZE) {
   const conditions = [eq(projects.status, 'launched')];
   const now = new Date();
 
@@ -44,8 +46,8 @@ async function getProjects(filter: string, _categorySlug?: string, page = 1) {
     db.query.projects.findMany({
       where: and(...conditions),
       orderBy,
-      limit: PAGE_SIZE,
-      offset: (page - 1) * PAGE_SIZE,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
       with: {
         creators: {
           with: {
@@ -54,6 +56,8 @@ async function getProjects(filter: string, _categorySlug?: string, page = 1) {
                 id: true,
                 username: true,
                 avatarUrl: true,
+                xAvatarUrl: true,
+                xVerified: true,
               },
             },
           },
@@ -96,6 +100,8 @@ function transformProject(project: any) {
       id: c.agent.id,
       username: c.agent.username,
       avatarUrl: c.agent.avatarUrl,
+      xAvatarUrl: c.agent.xAvatarUrl,
+      xVerified: c.agent.xVerified,
       role: c.role,
     })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -106,11 +112,12 @@ function transformProject(project: any) {
   };
 }
 
-function buildPageUrl(filter: string, categorySlug: string | undefined, page: number) {
+function buildPageUrl(filter: string, categorySlug: string | undefined, page: number, perPage: number) {
   const params = new URLSearchParams();
   if (filter && filter !== 'trending') params.set('filter', filter);
   if (categorySlug) params.set('category', categorySlug);
   if (page > 1) params.set('page', String(page));
+  if (perPage !== DEFAULT_PAGE_SIZE) params.set('per_page', String(perPage));
   const qs = params.toString();
   return `/projects${qs ? `?${qs}` : ''}`;
 }
@@ -120,15 +127,19 @@ export default async function ProjectsPage({ searchParams }: Props) {
   const filter = params.filter || 'trending';
   const categorySlug = params.category;
   const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
+  const rawPerPage = parseInt(params.per_page || '', 10);
+  const perPage = ALLOWED_PAGE_SIZES.includes(rawPerPage as typeof ALLOWED_PAGE_SIZES[number])
+    ? rawPerPage
+    : DEFAULT_PAGE_SIZE;
 
   const [{ projects: projectsData, total }, categoriesData] = await Promise.all([
-    getProjects(filter, categorySlug, page),
+    getProjects(filter, categorySlug, page, perPage),
     getCategories(),
   ]);
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(total / perPage);
   const showRank = filter === 'trending' || filter === 'today';
-  const rankOffset = (page - 1) * PAGE_SIZE;
+  const rankOffset = (page - 1) * perPage;
 
   const filters = [
     { value: 'trending', label: 'Trending' },
@@ -207,10 +218,31 @@ export default async function ProjectsPage({ searchParams }: Props) {
           />
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-2">
+          {(totalPages > 1 || total > ALLOWED_PAGE_SIZES[0]) && (
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+              {/* Page size selector */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Show</span>
+                <div className="flex gap-1">
+                  {ALLOWED_PAGE_SIZES.map((size) => (
+                    <Link key={size} href={buildPageUrl(filter, categorySlug, 1, size)}>
+                      <Button
+                        variant={perPage === size ? 'default' : 'outline'}
+                        size="sm"
+                        className={`w-12 ${perPage === size ? 'bg-upvote hover:bg-upvote-hover' : ''}`}
+                      >
+                        {size}
+                      </Button>
+                    </Link>
+                  ))}
+                </div>
+                <span>per page</span>
+              </div>
+
+              {totalPages > 1 && (
+              <div className="flex items-center gap-2">
               {page > 1 ? (
-                <Link href={buildPageUrl(filter, categorySlug, page - 1)}>
+                <Link href={buildPageUrl(filter, categorySlug, page - 1, perPage)}>
                   <Button variant="outline" size="sm" className="gap-1">
                     <ChevronLeft className="h-4 w-4" />
                     Previous
@@ -228,7 +260,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
                   p === '...' ? (
                     <span key={`ellipsis-${i}`} className="px-2 text-muted-foreground">...</span>
                   ) : (
-                    <Link key={p} href={buildPageUrl(filter, categorySlug, p as number)}>
+                    <Link key={p} href={buildPageUrl(filter, categorySlug, p as number, perPage)}>
                       <Button
                         variant={page === p ? 'default' : 'outline'}
                         size="sm"
@@ -242,7 +274,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
               </div>
 
               {page < totalPages ? (
-                <Link href={buildPageUrl(filter, categorySlug, page + 1)}>
+                <Link href={buildPageUrl(filter, categorySlug, page + 1, perPage)}>
                   <Button variant="outline" size="sm" className="gap-1">
                     Next
                     <ChevronRight className="h-4 w-4" />
@@ -253,6 +285,8 @@ export default async function ProjectsPage({ searchParams }: Props) {
                   Next
                   <ChevronRight className="h-4 w-4" />
                 </Button>
+              )}
+              </div>
               )}
             </div>
           )}

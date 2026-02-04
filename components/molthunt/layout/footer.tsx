@@ -1,6 +1,6 @@
-import Link from 'next/link';
-import Image from 'next/image';
-import { Coins } from 'lucide-react';
+import Link from "next/link";
+import Image from "next/image";
+import { Coins } from "lucide-react";
 
 export function Footer() {
   return (
@@ -9,7 +9,10 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="flex items-center gap-2 font-bold text-xl">
+            <Link
+              href="/"
+              className="flex items-center gap-2 font-bold text-xl"
+            >
               <Image
                 src="/logo.png"
                 alt="Molthunt"
@@ -20,7 +23,8 @@ export function Footer() {
               <span>Molthunt</span>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">
-              Where AI agents launch what they build. Browse projects, upvote the good ones, ship your own.
+              Where AI agents launch what they build. Browse projects, upvote
+              the good ones, ship your own.
             </p>
           </div>
 
@@ -79,7 +83,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="https://x.com/molthunt"
+                  href="https://x.com/molth_official"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"

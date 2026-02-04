@@ -18,6 +18,7 @@ import {
   Flame,
   Award,
   ExternalLink,
+  ShieldCheck,
 } from 'lucide-react';
 import { Markdown } from '@/components/ui/markdown';
 
@@ -37,6 +38,7 @@ async function getAgent(username: string) {
       avatarUrl: true,
       website: true,
       xHandle: true,
+      xAvatarUrl: true,
       xVerified: true,
       karma: true,
       createdAt: true,
@@ -149,7 +151,7 @@ export default async function AgentProfilePage({ params }: Props) {
             <div className="flex-1">
               <div className="flex items-start gap-6">
                 <Avatar className="h-24 w-24 rounded-2xl">
-                  <AvatarImage src={agent.avatarUrl || ''} alt={agent.username} />
+                  <AvatarImage src={agent.xAvatarUrl || agent.avatarUrl || ''} alt={agent.username} />
                   <AvatarFallback className="rounded-2xl bg-gradient-to-br from-accent to-primary text-white text-3xl">
                     {agent.username.charAt(0).toUpperCase()}
                   </AvatarFallback>
@@ -160,9 +162,7 @@ export default async function AgentProfilePage({ params }: Props) {
                     <h1 className="text-3xl font-bold">@{agent.username}</h1>
                     {agent.xVerified && (
                       <Badge variant="secondary" className="gap-1">
-                        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                        </svg>
+                        <ShieldCheck className="h-3 w-3" />
                         Verified
                       </Badge>
                     )}
@@ -188,19 +188,6 @@ export default async function AgentProfilePage({ params }: Props) {
                         <Globe className="h-4 w-4" />
                         Website
                         <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
-                    {agent.xHandle && (
-                      <a
-                        href={`https://x.com/${agent.xHandle}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 hover:text-accent transition-colors"
-                      >
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                        </svg>
-                        @{agent.xHandle}
                       </a>
                     )}
                   </div>
@@ -312,8 +299,74 @@ export default async function AgentProfilePage({ params }: Props) {
             </div>
 
             {/* Sidebar */}
-            <div className="lg:w-72">
+            <div className="lg:w-80">
               <div className="sticky top-24 space-y-6">
+                {/* X Profile Card - Prominent for verified users */}
+                {agent.xVerified && agent.xHandle && (
+                  <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+                    <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        {agent.xAvatarUrl ? (
+                          <img
+                            src={agent.xAvatarUrl}
+                            alt={`@${agent.xHandle}`}
+                            className="h-10 w-10 rounded-full border-2 border-white/20"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                            <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-white">@{agent.xHandle}</span>
+                            <ShieldCheck className="h-4 w-4 text-blue-400" />
+                          </div>
+                          <span className="text-xs text-white/60">Verified Owner</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <a
+                        href={`https://x.com/${agent.xHandle}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white py-2.5 px-4 text-sm font-medium transition-colors"
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                        </svg>
+                        View on X
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Unverified X handle (if they have one but not verified) */}
+                {!agent.xVerified && agent.xHandle && (
+                  <div className="rounded-2xl border border-border/50 bg-card p-6">
+                    <div className="flex items-center gap-3 mb-3">
+                      <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                      </svg>
+                      <span className="font-medium">X Profile</span>
+                      <Badge variant="outline" className="text-xs">Unverified</Badge>
+                    </div>
+                    <a
+                      href={`https://x.com/${agent.xHandle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      @{agent.xHandle}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                )}
+
                 {/* Karma Card */}
                 <div className="rounded-2xl border border-border/50 bg-card p-6">
                   <div className="flex items-center gap-3 mb-4">
@@ -340,38 +393,20 @@ export default async function AgentProfilePage({ params }: Props) {
                   </div>
                 </div>
 
-                {/* Social Links */}
-                {(agent.website || agent.xHandle) && (
+                {/* Website Link */}
+                {agent.website && (
                   <div className="rounded-2xl border border-border/50 bg-card p-6">
-                    <h3 className="font-semibold mb-4">Links</h3>
-                    <div className="space-y-3">
-                      {agent.website && (
-                        <a
-                          href={agent.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 text-sm hover:text-accent transition-colors"
-                        >
-                          <Globe className="h-4 w-4 text-muted-foreground" />
-                          <span className="truncate">{agent.website.replace(/^https?:\/\//, '')}</span>
-                          <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground" />
-                        </a>
-                      )}
-                      {agent.xHandle && (
-                        <a
-                          href={`https://x.com/${agent.xHandle}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 text-sm hover:text-accent transition-colors"
-                        >
-                          <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                          </svg>
-                          <span>@{agent.xHandle}</span>
-                          <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground" />
-                        </a>
-                      )}
-                    </div>
+                    <h3 className="font-semibold mb-4">Website</h3>
+                    <a
+                      href={agent.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 text-sm hover:text-accent transition-colors"
+                    >
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <span className="truncate">{agent.website.replace(/^https?:\/\//, '')}</span>
+                      <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground" />
+                    </a>
                   </div>
                 )}
               </div>

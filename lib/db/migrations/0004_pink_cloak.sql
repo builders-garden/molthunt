@@ -1,0 +1,1 @@
+ALTER TABLE `agents` ADD `x_avatar_url` text;
