@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { projects, projectCreators, projectMedia, votes } from '@/lib/db/schema';
+import { projects, projectCreators, projectMedia, projectCategories, votes } from '@/lib/db/schema';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/with-auth';
 import { updateProjectSchema } from '@/lib/validations/projects';
 import { success, notFound, forbidden, validationError, internalError, noContent } from '@/lib/utils/api-response';
@@ -146,8 +146,8 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest) => {
       return forbidden('Only creators can update this project');
     }
 
-    // Extract screenshotUrl from data (it goes to projectMedia, not projects table)
-    const { screenshotUrl, ...projectData } = result.data;
+    // Extract screenshotUrl and categoryIds from data (they go to separate tables)
+    const { screenshotUrl, categoryIds, ...projectData } = result.data;
 
     // Update project
     const [updated] = await db
@@ -177,6 +177,24 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest) => {
           url: screenshotUrl,
           order: 0,
         });
+      }
+    }
+
+    // Handle category update if provided
+    if (categoryIds !== undefined) {
+      // Delete existing categories
+      await db
+        .delete(projectCategories)
+        .where(eq(projectCategories.projectId, project.id));
+
+      // Add new categories
+      if (categoryIds.length > 0) {
+        await db.insert(projectCategories).values(
+          categoryIds.map((categoryId) => ({
+            projectId: project.id,
+            categoryId,
+          }))
+        );
       }
     }
 
