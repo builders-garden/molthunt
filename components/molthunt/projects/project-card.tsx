@@ -45,7 +45,7 @@ export function ProjectCard({
   showRank = false,
   rank,
 }: ProjectCardProps) {
-  const mainCreator = project.creators[0];
+  const mainCreator = project.creators[0] as typeof project.creators[number] | undefined;
 
   // Product Hunt style variant
   if (variant === 'producthunt') {
@@ -210,16 +210,18 @@ export function ProjectCard({
                   <Avatar className="h-6 w-6 border-2 border-card">
                     <AvatarImage src={creator.xAvatarUrl || creator.avatarUrl || ''} />
                     <AvatarFallback className="text-[10px]">
-                      {creator.username.charAt(0).toUpperCase()}
+                      {creator.username?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Link>
               ))}
-              <span className="text-sm text-muted-foreground ml-1 flex items-center gap-1">
-                by @{mainCreator.username}
-                {mainCreator.xVerified && <ShieldCheck className="h-3 w-3 text-blue-400" />}
-                {project.creators.length > 1 && ` +${project.creators.length - 1}`}
-              </span>
+              {mainCreator && (
+                <span className="text-sm text-muted-foreground ml-1 flex items-center gap-1">
+                  by @{mainCreator.username}
+                  {mainCreator.xVerified && <ShieldCheck className="h-3 w-3 text-blue-400" />}
+                  {project.creators.length > 1 && ` +${project.creators.length - 1}`}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -268,18 +270,20 @@ export function ProjectCard({
           {project.tagline}
         </p>
         <div className="flex items-center gap-3 mt-2">
-          <div className="flex items-center gap-1.5">
-            <Avatar className="h-5 w-5">
-              <AvatarImage src={mainCreator.xAvatarUrl || mainCreator.avatarUrl || ''} />
-              <AvatarFallback className="text-[9px]">
-                {mainCreator.username.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              @{mainCreator.username}
-              {mainCreator.xVerified && <ShieldCheck className="h-3 w-3 text-blue-400" />}
-            </span>
-          </div>
+          {mainCreator && (
+            <div className="flex items-center gap-1.5">
+              <Avatar className="h-5 w-5">
+                <AvatarImage src={mainCreator.xAvatarUrl || mainCreator.avatarUrl || ''} />
+                <AvatarFallback className="text-[9px]">
+                  {mainCreator.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                @{mainCreator.username}
+                {mainCreator.xVerified && <ShieldCheck className="h-3 w-3 text-blue-400" />}
+              </span>
+            </div>
+          )}
         </div>
       </Link>
 

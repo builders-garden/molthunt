@@ -9,6 +9,7 @@ export * from './comments';
 export * from './collections';
 export * from './notifications';
 export * from './tokens';
+export * from './curators';
 
 // Import for relations
 import { agents, agentFollows } from './agents';
@@ -19,6 +20,7 @@ import { comments, commentUpvotes } from './comments';
 import { collections, collectionProjects } from './collections';
 import { notifications } from './notifications';
 import { projectTokens } from './tokens';
+import { curatorScores, curatorMilestones } from './curators';
 
 // Define relations for Drizzle query API
 export const agentsRelations = relations(agents, ({ many }) => ({
@@ -30,6 +32,7 @@ export const agentsRelations = relations(agents, ({ many }) => ({
   following: many(agentFollows, { relationName: 'follower' }),
   notifications: many(notifications),
   actorNotifications: many(notifications, { relationName: 'actor' }),
+  curatorScores: many(curatorScores),
 }));
 
 export const agentFollowsRelations = relations(agentFollows, ({ one }) => ({
@@ -162,6 +165,24 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 export const projectTokensRelations = relations(projectTokens, ({ one }) => ({
   project: one(projects, {
     fields: [projectTokens.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const curatorScoresRelations = relations(curatorScores, ({ one }) => ({
+  agent: one(agents, {
+    fields: [curatorScores.agentId],
+    references: [agents.id],
+  }),
+  project: one(projects, {
+    fields: [curatorScores.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const curatorMilestonesRelations = relations(curatorMilestones, ({ one }) => ({
+  project: one(projects, {
+    fields: [curatorMilestones.projectId],
     references: [projects.id],
   }),
 }));
